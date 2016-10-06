@@ -4,7 +4,7 @@
 sort 
 	sPedalState = struct Pressed | Released;
 	sDNRPState = struct D | R | NP;
-	sCarState = struct On | Off;
+	sCarState = struct SwitchOn | SwitchOff;
 	sBatteryState = struct Unsafe | Safe | Full;
 	sCCThreshold = struct BelowCCmin | AboveCCmin;
 	sTurnOffThreshold = struct BelowTurnOffMax | AboveTurnOffMax;
@@ -22,7 +22,7 @@ act
   aDNRP : sDNRPState;
   aCar : sCarState;
   aBattery : sBatteryState;
-  aSpeed : sCCThreshold # sOnOffThreshold # sDirection;
+  aSpeed : sCCThreshold # sTurnOffThreshold # sDirection;
   aCC : sCCState;
 
   % Output actions
@@ -33,8 +33,14 @@ act
 % Communicating action declarations
 % --------------------
 act 
-	recv_s2c_VCS, send_s2c_VCS, s2c_VCS, 						% Used for communication from VCS from safety to CC
-	recv_c2s_VCS, send_c2s_VCS, c2s_VCS;						% Used for communication from CC from safety to VCS
+	% Used for communication from VCS from safety to CC
+	recv_s2c_VCS,
+	send_s2c_VCS, 
+	s2c_VCS, 				
+	% Used for communication from CC from safety to VCS			
+	recv_c2s_VCS, 
+	send_c2s_VCS, 
+	c2s_VCS : sVirtualCarState;					
 
 % --------------------
 % Safety Procedure
@@ -46,11 +52,11 @@ proc Safety(vcs:sVirtualCarState) =
 	% Car button interactions
 	sum btn:sCarState.aCar(btn).
 		% The car is turned on
-		(vcs==Off && btn==On) ->
+		(vcs==Off && btn==SwitchOn) ->
 			aVCS(On).Safety(On)
 		<> 
 			% The car is turned off
-			((vcs==On || vsc==CC) && btn==On) ->
+			((vcs==On || vcs==CC) && btn==SwitchOn) ->
 				aVCS(Off).Safety(Off)
 			<> 
 				Safety(vcs)
@@ -58,37 +64,37 @@ proc Safety(vcs:sVirtualCarState) =
 	+
 
 	% Cruise control interactions
-	sum recv:sCarState.recv_c2s_VCS(recv).
+	sum recv:sVirtualCarState.recv_c2s_VCS(recv).
 		% Cruise control components requests to turn on CC
 		(recv==CC && vcs==On) ->
-			send_s2c(recv).Safety(CC)
+			send_s2c_VCS(recv).Safety(CC)
 		<> 
 		% Cruise control component requests to turn off CC
 		(recv==On && vcs==CC) ->
-			send_s2c(recv).Safety(On)
+			send_s2c_VCS(recv).Safety(On)
 		<>
 		% Request has been denied, no change applied. (todo: think if we want to send current, unchanged state back)
-			Safety(vcs)
+			Safety(vcs);
 
 
 % --------------------
 % Cruise control procedure
 % --------------------
 proc CruiseControl(vcs:sVirtualCarState) = 
-	aCC(Set).
+	aCC(Enable).
 	%TODO: add additional constrains on when CC is allowed to be turned on
 	(vcs==On) ->
-		send_c2s(CC).CruiseControl(CC)
+		send_c2s_VCS(CC).CruiseControl(CC)
 		<>
 		CruiseControl(vcs)
 	+
-	aCC(Reset)
+	aCC(Disable).
 	(vcs==CC) ->
-	  send_c2s(On).CruiseControl(On)
+	  send_c2s_VCS(On).CruiseControl(On)
 	  <>
 	  CruiseControl(vcs)
 	+
-	sum newState:sVirtualCarState.recv_s2c(newState).CruiseControl(newState);
+	sum newState:sVirtualCarState.recv_s2c_VCS(newState).CruiseControl(newState);
 	%TODO add additional checks on conditions that can disable CC
 
 % --------------------
@@ -105,6 +111,7 @@ init
 	comm(
 		{ 
 			recv_s2c_VCS | send_s2c_VCS -> s2c_VCS, 						% Communicates VCS from safety to CC
-			recv_c2s_VCS | send_c2s_VCS -> c2s_VCS, 						% Communicates VCS from CC to safety
-		}
+			recv_c2s_VCS | send_c2s_VCS -> c2s_VCS 							% Communicates VCS from CC to safety
+		},
+		Safety(Off) || CruiseControl(Off)
 		));
