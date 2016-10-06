@@ -53,11 +53,11 @@ proc Safety(vcs:sVirtualCarState) =
 	sum btn:sCarState.aCar(btn).
 		% The car is turned on
 		(vcs==Off && btn==SwitchOn) ->
-			aVCS(On).Safety(On)
+			aVCS(On).send_s2c_VCS(On).Safety(On)
 		<> 
 			% The car is turned off
 			((vcs==On || vcs==CC) && btn==SwitchOn) ->
-				aVCS(Off).Safety(Off)
+				aVCS(Off).send_s2c_VCS(Off).Safety(Off)
 			<> 
 				Safety(vcs)
 	
@@ -84,13 +84,13 @@ proc CruiseControl(vcs:sVirtualCarState) =
 	aCC(Enable).
 	%TODO: add additional constrains on when CC is allowed to be turned on
 	(vcs==On) ->
-		send_c2s_VCS(CC).CruiseControl(CC)
+		send_c2s_VCS(CC).recv_s2c_VCS(CC).CruiseControl(CC)
 		<>
 		CruiseControl(vcs)
 	+
 	aCC(Disable).
 	(vcs==CC) ->
-	  send_c2s_VCS(On).CruiseControl(On)
+	  send_c2s_VCS(On).recv_s2c_VCS(On).CruiseControl(On)
 	  <>
 	  CruiseControl(vcs)
 	+
