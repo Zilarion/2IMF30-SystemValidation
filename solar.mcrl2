@@ -33,15 +33,26 @@ act
 % Safety Procedure
 % --------------------
 proc Safety(vcs:sVirtualCarState) =
-	% All button options from this state
-	sum btn:sCarState.btn.
+	% All button options from this state (question: do we do btn for tracability?)
+
+
 	% The car is turned on
-	(vcs==Off && btn==On) ->
-		aVirtualCarState(On).Safety(On)
+	sum btn:sCarState.btn.
+		(vcs==Off && btn==On) ->
+			aVirtualCarState(On).Safety(On)
 	+
+
 	% The car is turned off
-	(vcs==On && btn==On) ->
-		aVirtualCarState(Off).Safety(Off);
+	sum btn:sCarState.btn.
+		((vcs==On || vsc==CC) && btn==On) ->
+			aVirtualCarState(Off).Safety(Off)
+	
+	+
+
+	% The car receives a CC communication
+	sum c2s:sVirtualCarState.
+		(c2s==CC && vcs==On) ->
+			aVirtualCarState(CC).Safety(CC)
 
 % --------------------
 % Cruise control procedure
