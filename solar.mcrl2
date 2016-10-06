@@ -1,6 +1,3 @@
-% Action declarations
-
-
 % Sort declarations
 sort 
 	sPedalState = struct Pressed | Released;
@@ -12,6 +9,17 @@ sort
 	sDirection = struct Forwards | Backwards | Static;
 	sCCState = struct Set | Reset;
 	sVirtualCarState = struct On | Off | CC;
+
+% Action declarations
+act
+	%Input actions from the user and environment
+  aGasPeddal : PedalState,
+  aBrakePeddal : PedalState,
+  aDNRP : sDNRPState,
+  aCar : sCarState,
+  aBattery : sBatteryState,
+  aSpeed : sCCThreshold # sOnOffThreshold # sDirection,
+  aCC : sCCState
 
 % Safety Procedure
 
