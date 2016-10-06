@@ -25,14 +25,25 @@ act
   aMotororce : sDirection;
 
 % Safety Procedure
-
+proc Safety(btn:sCarState, vcs:sVirtualCarState) =
+	(btn==On && vcs==Off) ->
+		sVirtualCarState(On)
 
 
 % Cruise control procedure
+
 
 
 % Drive procedure
 
 
 % Process definition
-init()
+init
+	allow(
+		{ cVCS },
+	comm(
+		{ 
+			recv_cc_VCS | send_cc_VCS -> s2cc_VCS, 						% Communicates VCS from safety to CC
+			recv_drive_VCS | send_drive_VCS -> s2d_VCS, 			% Communicates VCS from safety to CC
+		}
+		));
