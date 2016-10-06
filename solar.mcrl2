@@ -17,8 +17,8 @@ sort
 % --------------------
 act
 	% Input actions from the user and environment
-  aGasPeddal : PedalState;
-  aBrakePeddal : PedalState;
+  aGasPeddal : sPedalState;
+  aBrakePeddal : sPedalState;
   aDNRP : sDNRPState;
   aCar : sCarState;
   aBattery : sBatteryState;
