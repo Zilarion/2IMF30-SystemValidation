@@ -1,4 +1,5 @@
 % Sort declarations
+% --------------------
 sort 
 	sPedalState = struct Pressed | Released;
 	sDNRPState = struct D | R | NP;
@@ -11,8 +12,9 @@ sort
 	sVirtualCarState = struct On | Off | CC;
 
 % Action declarations
+% --------------------
 act
-	%Input actions from the user and environment
+	% Input actions from the user and environment
   aGasPeddal : PedalState;
   aBrakePeddal : PedalState;
   aDNRP : sDNRPState;
@@ -20,11 +22,13 @@ act
   aBattery : sBatteryState;
   aSpeed : sCCThreshold # sOnOffThreshold # sDirection;
   aCC : sCCState;
-  %Output actions
+
+  % Output actions
   aVCS : sVirtualCarState;
   aMotororce : sDirection;
 
 % Safety Procedure
+% --------------------
 proc Safety(vcs:sVirtualCarState) =
 	sum btn:sCarState.btn.
 	% The car is turned on
@@ -37,13 +41,16 @@ proc Safety(vcs:sVirtualCarState) =
 
 
 % Cruise control procedure
+% --------------------
 
 
 
 % Drive procedure
+% --------------------
 
 
 % Process definition
+% --------------------
 init
 	allow(
 		{ cVCS },
