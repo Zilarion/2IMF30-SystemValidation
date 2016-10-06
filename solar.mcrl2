@@ -42,7 +42,20 @@ proc Safety(vcs:sVirtualCarState) =
 
 % Cruise control procedure
 % --------------------
-
+proc CruiseControl(vcs:sVirtualCarState) = 
+	aCC(Set).
+	%TODO: add additional constrains on when CC is allowed to be turned on
+	(vcs==On) ->
+		aVCS(CC)
+		<>
+		aVCS(vcs)
+	+
+	aCC(Reset)
+	(vcs==CC) ->
+	  aVCS(On)
+	  <>
+	  aVSC(vcs);
+	%TODO add additional checks on conditions that can disable CC
 
 
 % Drive procedure
