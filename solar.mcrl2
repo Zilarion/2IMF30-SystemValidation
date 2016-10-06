@@ -1,6 +1,18 @@
 % Action declarations
 
 
+% Sort declarations
+sort 
+	sPedalState = struct Pressed | Released;
+	sDNRPState = struct D | R | NP;
+	sCarState = struct On | Off;
+	sBatteryState struct Unsafe | Safe | Full;
+	sCCThreshold = struct BelowCCmin | AboveCCmin;
+	sTurnOffThreshold = struct BelowTurnOffMax | AboveTurnOffMax;
+	sDirection = struct Forwards | Backwards | Static;
+	sCCState = struct Set | Reset;
+	sVirtualCarState = struct On | Off | CC;
+
 % Safety Procedure
 
 
