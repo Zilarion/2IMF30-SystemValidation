@@ -1,0 +1,25 @@
+{
+  "name": "system_validation",
+  "version": "1.0.0",
+  "description": "System Validation of a solar car.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Zilarion/2IMF30-SystemValidation.git"
+  },
+  "author": "Ruud Andriessen",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Zilarion/2IMF30-SystemValidation/issues"
+  },
+  "homepage": "https://github.com/Zilarion/2IMF30-SystemValidation#readme",
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-run": "^1.7.1",
+    "gulp-watch": "^4.3.10",
+    "run-sequence": "^1.2.2"
+  }
+}
