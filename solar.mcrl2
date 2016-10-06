@@ -39,20 +39,20 @@ proc Safety(vcs:sVirtualCarState) =
 	% The car is turned on
 	sum btn:sCarState.btn.
 		(vcs==Off && btn==On) ->
-			aVirtualCarState(On).Safety(On)
+			aVCS(On).Safety(On)
 	+
 
 	% The car is turned off
 	sum btn:sCarState.btn.
 		((vcs==On || vsc==CC) && btn==On) ->
-			aVirtualCarState(Off).Safety(Off)
+			aVCS(Off).Safety(Off)
 	
 	+
 
 	% The car receives a CC communication
 	sum c2s:sVirtualCarState.
 		(c2s==CC && vcs==On) ->
-			aVirtualCarState(CC).Safety(CC)
+			aVCS(CC).Safety(CC)
 
 % --------------------
 % Cruise control procedure
