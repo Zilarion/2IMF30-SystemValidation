@@ -29,11 +29,11 @@ act
   aVCS : sVirtualCarState;
   aMotororce : sDirection;
 
-
 % --------------------
 % Safety Procedure
 % --------------------
 proc Safety(vcs:sVirtualCarState) =
+	% All button options from this state
 	sum btn:sCarState.btn.
 	% The car is turned on
 	(vcs==Off && btn==On) ->
@@ -41,7 +41,7 @@ proc Safety(vcs:sVirtualCarState) =
 	+
 	% The car is turned off
 	(vcs==On && btn==On) ->
-		aVirtualCarState(Off).Safety(Off)
+		aVirtualCarState(Off).Safety(Off);
 
 % --------------------
 % Cruise control procedure
@@ -58,10 +58,10 @@ proc Safety(vcs:sVirtualCarState) =
 % --------------------
 init
 	allow(
-		{ cVCS },
+		{ s2c_VCS, c2s_VCS },
 	comm(
 		{ 
-			recv_cc_VCS | send_cc_VCS -> s2cc_VCS, 						% Communicates VCS from safety to CC
-			recv_drive_VCS | send_drive_VCS -> s2d_VCS, 			% Communicates VCS from safety to CC
+			recv_s2c_VCS | send_s2c_VCS -> s2c_VCS, 						% Communicates VCS from safety to CC
+			recv_c2s_VCS | send_c2s_VCS -> c2s_VCS, 						% Communicates VCS from CC to safety
 		}
 		));
