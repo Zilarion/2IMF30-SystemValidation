@@ -5,11 +5,11 @@ sort
 	sPedalState = struct Pressed | Released;
 	sDNRPState = struct D | R | NP;
 	sCarState = struct On | Off;
-	sBatteryState struct Unsafe | Safe | Full;
+	sBatteryState = struct Unsafe | Safe | Full;
 	sCCThreshold = struct BelowCCmin | AboveCCmin;
 	sTurnOffThreshold = struct BelowTurnOffMax | AboveTurnOffMax;
 	sDirection = struct Forwards | Backwards | Static;
-	sCCState = struct Set | Reset;
+	sCCState = struct Enable | Disable;
 	sVirtualCarState = struct On | Off | CC;
 
 % --------------------
