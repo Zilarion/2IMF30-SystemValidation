@@ -25,9 +25,15 @@ act
   aMotororce : sDirection;
 
 % Safety Procedure
-proc Safety(btn:sCarState, vcs:sVirtualCarState) =
-	(btn==On && vcs==Off) ->
-		sVirtualCarState(On)
+proc Safety(vcs:sVirtualCarState) =
+	sum btn:sCarState.btn.
+	% The car is turned on
+	(vcs==Off && btn==On) ->
+		aVirtualCarState(On).Safety(On)
+	+
+	% The car is turned off
+	(vcs==On && btn==On) ->
+		aVirtualCarState(Off).Safety(Off)
 
 
 % Cruise control procedure
