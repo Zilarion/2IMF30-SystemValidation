@@ -1,3 +1,4 @@
+% --------------------
 % Sort declarations
 % --------------------
 sort 
@@ -11,6 +12,7 @@ sort
 	sCCState = struct Set | Reset;
 	sVirtualCarState = struct On | Off | CC;
 
+% --------------------
 % Action declarations
 % --------------------
 act
@@ -27,6 +29,8 @@ act
   aVCS : sVirtualCarState;
   aMotororce : sDirection;
 
+
+% --------------------
 % Safety Procedure
 % --------------------
 proc Safety(vcs:sVirtualCarState) =
@@ -39,16 +43,17 @@ proc Safety(vcs:sVirtualCarState) =
 	(vcs==On && btn==On) ->
 		aVirtualCarState(Off).Safety(Off)
 
-
+% --------------------
 % Cruise control procedure
 % --------------------
 
 
-
+% --------------------
 % Drive procedure
 % --------------------
 
 
+% --------------------
 % Process definition
 % --------------------
 init
