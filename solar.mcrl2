@@ -30,6 +30,13 @@ act
   aMotororce : sDirection;
 
 % --------------------
+% Communicating action declarations
+% --------------------
+act 
+	recv_s2c_VCS, send_s2c_VCS, s2c_VCS, 						% Used for communication from VCS from safety to CC
+	recv_c2s_VCS, send_c2s_VCS, c2s_VCS;						% Used for communication from CC from safety to VCS
+
+% --------------------
 % Safety Procedure
 % --------------------
 proc Safety(vcs:sVirtualCarState) =
