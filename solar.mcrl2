@@ -43,6 +43,7 @@ proc Safety(vcs:sVirtualCarState) =
 	% All button options from this state (question: do we do btn for tracability?)
 	% Do we just do aCar(On) ??
 
+	% Car button interactions
 	sum btn:sCarState.aCar(btn).
 		% The car is turned on
 		(vcs==Off && btn==On) ->
@@ -56,12 +57,19 @@ proc Safety(vcs:sVirtualCarState) =
 	
 	+
 
-	% The car receives a CC communication
-	recv_c2s_VCS(CC).
-		(vcs==On) ->
-			send_s2c(CC).Safety(CC)
+	% Cruise control interactions
+	sum recv:sCarState.recv_c2s_VCS(recv).
+		% Cruise control components requests to turn on CC
+		(recv==CC && vcs==On) ->
+			send_s2c(recv).Safety(CC)
 		<> 
+		% Cruise control component requests to turn off CC
+		(recv==On && vcs==CC) ->
+			send_s2c(recv).Safety(On)
+		<>
+		% Request has been denied, no change applied. (todo: think if we want to send current, unchanged state back)
 			Safety(vcs)
+
 
 % --------------------
 % Cruise control procedure
