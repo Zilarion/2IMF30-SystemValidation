@@ -36,15 +36,10 @@ proc Safety(vcs:sVirtualCarState) =
 	% All button options from this state (question: do we do btn for tracability?)
 
 	% The car is turned on
-	sum btn:sCarState.btn.
+	sum btn:sCarState.aCar(btn).
 		(vcs==Off && btn==On) ->
 			aVCS(On).Safety(On)
 			<> 
-			Safety(vcs)
-	+
-
-	% The car is turned off
-	sum btn:sCarState.btn.
 		((vcs==On || vsc==CC) && btn==On) ->
 			aVCS(Off).Safety(Off)
 			<> 
