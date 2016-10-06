@@ -13,13 +13,16 @@ sort
 % Action declarations
 act
 	%Input actions from the user and environment
-  aGasPeddal : PedalState,
-  aBrakePeddal : PedalState,
-  aDNRP : sDNRPState,
-  aCar : sCarState,
-  aBattery : sBatteryState,
-  aSpeed : sCCThreshold # sOnOffThreshold # sDirection,
-  aCC : sCCState
+  aGasPeddal : PedalState;
+  aBrakePeddal : PedalState;
+  aDNRP : sDNRPState;
+  aCar : sCarState;
+  aBattery : sBatteryState;
+  aSpeed : sCCThreshold # sOnOffThreshold # sDirection;
+  aCC : sCCState;
+  %Output actions
+  aVCS : sVirtualCarState;
+  aMotororce : sDirection;
 
 % Safety Procedure
 
