@@ -107,7 +107,7 @@ proc CruiseControl(vcs:sVirtualCarState) =
 % --------------------
 init
 	allow(
-		{ s2c_VCS, c2s_VCS },
+		{ aCar, aCC, aVCS, s2c_VCS, c2s_VCS },
 	comm(
 		{ 
 			recv_s2c_VCS | send_s2c_VCS -> s2c_VCS, 						% Communicates VCS from safety to CC
