@@ -1,0 +1,1 @@
+ltsgraph solar.lts
