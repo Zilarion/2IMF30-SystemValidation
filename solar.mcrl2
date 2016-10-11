@@ -46,20 +46,21 @@ act
 % Safety Procedure
 % --------------------
 proc Safety(vcs:sVirtualCarState) =
-	% All button options from this state (question: do we do btn for tracability?)
-	% Do we just do aCar(On) ??
-
 	% Car button interactions
-	sum btn:sCarState.aCar(btn).
-		% The car is turned on
-		(vcs==Off && btn==SwitchOn) ->
-			aVCS(On).send_s2c_VCS(On).Safety(On)
+	% The car is turned on
+	aCar(SwitchOn).
+		(vcs==Off) ->
+			aVCS(On).(send_s2c_VCS(On).Safety(On) + Safety(On).send_s2c_VCS(On).Safety(On))
 		<> 
-			% The car is turned off
-			((vcs==On || vcs==CC) && btn==SwitchOn) ->
-				aVCS(Off).send_s2c_VCS(Off).Safety(Off)
-			<> 
-				Safety(vcs)
+		Safety(vcs)
+	+
+	
+	% The car is turned off
+	aCar(SwitchOff).
+		((vcs==On || vcs==CC)) ->
+			aVCS(Off).(send_s2c_VCS(Off).Safety(Off) + Safety(Off).send_s2c_VCS(Off).Safety(Off))
+		<> 
+		Safety(vcs)
 	
 	+
 
@@ -67,14 +68,14 @@ proc Safety(vcs:sVirtualCarState) =
 	sum recv:sVirtualCarState.recv_c2s_VCS(recv).
 		% Cruise control components requests to turn on CC
 		(recv==CC && vcs==On) ->
-			send_s2c_VCS(recv).Safety(CC)
+			send_s2c_VCS(recv).Safety(recv)
 		<> 
 		% Cruise control component requests to turn off CC
 		(recv==On && vcs==CC) ->
-			send_s2c_VCS(recv).Safety(On)
+			send_s2c_VCS(recv).Safety(recv)
 		<>
-		% Request has been denied, no change applied. (todo: think if we want to send current, unchanged state back)
-			Safety(vcs);
+		% Request has been denied, no change applied but the unchanged state is send back
+			send_s2c_VCS(vcs).Safety(vcs);
 
 
 % --------------------
@@ -83,16 +84,16 @@ proc Safety(vcs:sVirtualCarState) =
 proc CruiseControl(vcs:sVirtualCarState) = 
 	aCC(Enable).
 	%TODO: add additional constrains on when CC is allowed to be turned on
-	(vcs==On) ->
-		send_c2s_VCS(CC).recv_s2c_VCS(CC).CruiseControl(CC)
+		(vcs==On) ->
+			send_c2s_VCS(CC).sum recv:sVirtualCarState.(recv_s2c_VCS(recv).CruiseControl(recv))
 		<>
-		CruiseControl(vcs)
+			CruiseControl(vcs)
 	+
 	aCC(Disable).
-	(vcs==CC) ->
-	  send_c2s_VCS(On).recv_s2c_VCS(On).CruiseControl(On)
-	  <>
-	  CruiseControl(vcs)
+		(vcs==CC) ->
+			send_c2s_VCS(On).sum recv:sVirtualCarState.(recv_s2c_VCS(recv).CruiseControl(recv))
+		<>
+	  		CruiseControl(vcs)
 	+
 	sum newState:sVirtualCarState.recv_s2c_VCS(newState).CruiseControl(newState);
 	%TODO add additional checks on conditions that can disable CC

@@ -1,0 +1,3 @@
+% Check if the system is deadlock free
+
+[true*]<true>true

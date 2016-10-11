@@ -34,7 +34,7 @@ gulp.task('pbes', function() {
 })
 
 // Validate all pbes
-gulp.task('validate', function() {
+gulp.task('validate', ['pbes'], function() {
   return gulp
     .src(paths.pbes.files)
     .pipe(run('pbes2bool pbes/<%= file.relative %>'))
