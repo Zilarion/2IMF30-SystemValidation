@@ -12,8 +12,6 @@ sort
 	sCCState = struct Enable | Disable;
 	sVirtualCarState = struct On | Off | CC;
 
-sort
-	sMessage = struct sPedalState | sDNRPState | sCarState | sBatteryState | sCCThreshold | sTurnOffThreshold | sDirection | sCCState | sVirtualCarState;
 % --------------------
 % Action declarations
 % --------------------
@@ -42,7 +40,7 @@ act
 	% Used for communication from CC to safety		
 	recv_c2s_VCS, 
 	send_c2s_VCS, 
-	c2s_VCS : sVirtualCarState;					
+	c2s_VCS : sVirtualCarState;				
 
 % --------------------
 % Safety Procedure
@@ -54,7 +52,7 @@ proc Safety(vcs:sVirtualCarState, target:sVirtualCarState) =
 		(vcs==Off) ->
 			Safety(vcs, On)
 		<> 
-		Safety(vcs)
+		Safety(vcs, target)
 	+
 	
 	% The car is turned off
@@ -62,12 +60,18 @@ proc Safety(vcs:sVirtualCarState, target:sVirtualCarState) =
 		((vcs==On || vcs==CC)) ->
 			Safety(vcs, Off)
 		<> 
-		Safety(vcs)
+		Safety(vcs, target)
 	
 	+
 	
-	(target != None) ->
-		send_s2c_VCS(target).aVCS(target).Safety(target, None)
+	% Battery is unsafe
+	aBattery(Unsafe).
+		Safety(vcs, Off)
+
+	+
+
+	(vcs != target) ->
+		send_s2c_VCS(target).aVCS(target).Safety(target, target)
 	
 	+
 	
@@ -82,7 +86,7 @@ proc Safety(vcs:sVirtualCarState, target:sVirtualCarState) =
 			Safety(vcs, recv)
 		<>
 		% Request has been denied, no change applied but the unchanged state is send back
-			Safety(vcs, vcs);
+			send_s2c_VCS(vcs).Safety(vcs, vcs);
 
 
 % --------------------
@@ -121,5 +125,5 @@ init
 			recv_s2c_VCS | send_s2c_VCS -> s2c_VCS, 		% Communicates VCS from safety to CC
 			recv_c2s_VCS | send_c2s_VCS -> c2s_VCS		% Communicates VCS from CC to safety
 		},
-		Safety(Off) || CruiseControl(Off)
+		Safety(Off, Off) || CruiseControl(Off)
 		));
