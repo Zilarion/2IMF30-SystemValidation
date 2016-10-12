@@ -11,6 +11,7 @@ sort
 	sDirection = struct Forwards | Backwards | Static;
 	sCCState = struct Enable | Disable;
 	sVirtualCarState = struct On | Off | CC;
+	sBrakeLighting = struct LightOn | LightOff;
 
 % --------------------
 % Action declarations
@@ -28,99 +29,87 @@ act
   	% Output actions
   	aVCS : sVirtualCarState;
   	aMotororce : sDirection;
+	aBrakeLighting: sBrakeLighting;
 
 % --------------------
 % Communicating action declarations
 % --------------------
 act 
-	% Used for communication from safety to CC
-	recv_s2c_VCS,
-	send_s2c_VCS, 
-	s2c_VCS, 				
-	% Used for communication from CC to safety		
-	recv_c2s_VCS, 
-	send_c2s_VCS, 
-	c2s_VCS : sVirtualCarState;				
+	% Used for communication of VCS
+	send_VCS,
+	recv_VCS_light, 
+	recv_VCS_drive,
+	comm_VCS : sVirtualCarState;				
 
 % --------------------
 % Safety Procedure
 % --------------------
-proc Safety(vcs:sVirtualCarState, target:sVirtualCarState) =
-	% Handle state changes
-	(vcs != target) ->
-		send_s2c_VCS(target).aVCS(target).Safety(target, target)
-	
-	+
-
+proc Safety(vcs:sVirtualCarState) =
 	% Car button interactions
 	sum btn:sCarState.aCar(btn).
 		% The car is turned on
 		(btn == SwitchOn && vcs==Off) ->
-			Safety(vcs, On)
+			aVCS(On).send_VCS(On).Safety(On)
 		<> 
 		% The car is turned off
 		(btn == SwitchOff && (vcs==On || vcs==CC)) ->
-			Safety(vcs, Off)
+			aVCS(Off).send_VCS(Off).Safety(Off)
 		<> 
 		% We don't have to change anything
-		Safety(vcs, target)
+		Safety(vcs)
 	
 	+
 	
 	% Battery is unsafe
-	aBattery(Unsafe).
-		Safety(vcs, Off)
+	(vcs==On) ->
+		aBattery(Unsafe).aVCS(Off).send_VCS(Off).Safety(Off)
 
 	+
 	
 	% Cruise control interactions
-	sum recv:sVirtualCarState.recv_c2s_VCS(recv).
+	sum btn:sCCState.aCC(btn).
 		% Cruise control components requests to turn on CC
-		(recv==CC && vcs==On) ->
-			Safety(vcs, recv)
+		(btn==Enable && vcs==On) ->
+			aVCS(CC).send_VCS(CC).Safety(CC)
 		<> 
 		% Cruise control component requests to turn off CC
-		(recv==On && vcs==CC) ->
-			Safety(vcs, recv)
+		(btn==Disable && vcs==CC) ->
+			aVCS(On).send_VCS(On).Safety(On)
 		<>
 		% Request has been denied, no change applied but the unchanged state is send back
-			Safety(vcs, vcs);
+			Safety(vcs);
 
 
 % --------------------
-% Cruise control procedure
+% Lighting procedure
 % --------------------
-proc CruiseControl(vcs:sVirtualCarState) = 
-	sum btn:sCCState.aCC(btn).
-		(btn == Enable && vcs==On) ->
-			send_c2s_VCS(CC).CruiseControl(vcs)
+proc Lighting(vcs:sVirtualCarState) = 
+	sum recv:sVirtualCarState.recv_VCS_light(recv).
+		(recv==Off) ->
+			aBrakeLighting(LightOff).Lighting(recv)
 		<>
-		(btn == Disable && vcs==CC) ->
-			send_c2s_VCS(On).CruiseControl(vcs)
-			
-		<>
-		CruiseControl(vcs)
-	
+			Lighting(vcs)
+
 	+
 
-	sum newState:sVirtualCarState.recv_s2c_VCS(newState).CruiseControl(newState);
-	%TODO add additional checks on conditions that can disable CC
+	(vcs==On) -> % and brake is true
+		aBrakeLighting(LightOn).Lighting(vcs);
 
 % --------------------
 % Drive procedure
 % --------------------
-
+proc Drive(vcs: sVirtualCarState) = 
+	sum recv:sVirtualCarState.recv_VCS_drive(recv).Drive(recv);
 
 % --------------------
 % Process definition
 % --------------------
 init
 	allow({ 
-		aCar, aBattery, aCC, aVCS, s2c_VCS, c2s_VCS 
+		aCar, aBrakeLighting, aBattery, aCC, aVCS, comm_VCS
 	},
 	comm({ 
-		recv_s2c_VCS | send_s2c_VCS -> s2c_VCS, 		% Communicates VCS from safety to CC
-		recv_c2s_VCS | send_c2s_VCS -> c2s_VCS		% Communicates VCS from CC to safety
+		send_VCS | recv_VCS_drive | recv_VCS_light -> comm_VCS 		% Communicates VCS from safety to other modules
 	},
-	Safety(Off, Off) || CruiseControl(Off)
+	Safety(Off) || Lighting(Off) || Drive(Off)
 	));
