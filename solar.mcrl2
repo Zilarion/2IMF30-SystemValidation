@@ -84,26 +84,25 @@ proc Safety(vcs:sVirtualCarState, target:sVirtualCarState) =
 			Safety(vcs, recv)
 		<>
 		% Request has been denied, no change applied but the unchanged state is send back
-			send_s2c_VCS(vcs).Safety(vcs, vcs);
+			Safety(vcs, vcs);
 
 
 % --------------------
 % Cruise control procedure
 % --------------------
 proc CruiseControl(vcs:sVirtualCarState) = 
-	aCC(Enable).
-	%TODO: add additional constrains on when CC is allowed to be turned on
-		(vcs==On) ->
-			send_c2s_VCS(CC).sum recv:sVirtualCarState.(recv_s2c_VCS(recv).CruiseControl(recv))
+	sum btn:sCCState.aCC(btn).
+		(btn == Enable && vcs==On) ->
+			send_c2s_VCS(CC).CruiseControl(vcs)
 		<>
-			CruiseControl(vcs)
-	+
-	aCC(Disable).
-		(vcs==CC) ->
-			send_c2s_VCS(On).sum recv:sVirtualCarState.(recv_s2c_VCS(recv).CruiseControl(recv))
+		(btn == Disable && vcs==CC) ->
+			send_c2s_VCS(On).CruiseControl(vcs)
+			
 		<>
-	  		CruiseControl(vcs)
+		CruiseControl(vcs)
+	
 	+
+
 	sum newState:sVirtualCarState.recv_s2c_VCS(newState).CruiseControl(newState);
 	%TODO add additional checks on conditions that can disable CC
 
