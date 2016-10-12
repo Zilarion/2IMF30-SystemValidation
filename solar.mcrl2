@@ -71,6 +71,7 @@ proc Safety(state:safetyState, target:safetyState) =
 		% Battery is unsafe, turn off!
 		aBattery(Unsafe).Safety(target=safetyOff);
 
+
 % --------------------
 % Steering procedure
 % --------------------
@@ -90,7 +91,7 @@ proc Steering(state:steeringState) =
 			Steering(steeringOff)	
 	
 	% Interactions only possible when active
-	+ (state==steeringOn) ->
+	+ (state==steeringOn) -> (
 		% Cruise control interactions
 		sum btn:sCCButton.aCC(btn).
 			% Do request to turn CC on
@@ -100,8 +101,7 @@ proc Steering(state:steeringState) =
 			% Do request to turn CC off			
 			(btn==Disable) ->
 				s_ccEnable(Disabled)
-;
-
+	);
 
 % --------------------
 % Lighting procedure
