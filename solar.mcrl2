@@ -46,20 +46,23 @@ act
 % Safety Procedure
 % --------------------
 proc Safety(vcs:sVirtualCarState, target:sVirtualCarState) =
+	% Handle state changes
+	(vcs != target) ->
+		send_s2c_VCS(target).aVCS(target).Safety(target, target)
+	
+	+
+
 	% Car button interactions
-	% The car is turned on
-	aCar(SwitchOn).
-		(vcs==Off) ->
+	sum btn:sCarState.aCar(btn).
+		% The car is turned on
+		(btn == SwitchOn && vcs==Off) ->
 			Safety(vcs, On)
 		<> 
-		Safety(vcs, target)
-	+
-	
-	% The car is turned off
-	aCar(SwitchOff).
-		((vcs==On || vcs==CC)) ->
+		% The car is turned off
+		(btn == SwitchOff && (vcs==On || vcs==CC)) ->
 			Safety(vcs, Off)
 		<> 
+		% We don't have to change anything
 		Safety(vcs, target)
 	
 	+
@@ -68,11 +71,6 @@ proc Safety(vcs:sVirtualCarState, target:sVirtualCarState) =
 	aBattery(Unsafe).
 		Safety(vcs, Off)
 
-	+
-
-	(vcs != target) ->
-		send_s2c_VCS(target).aVCS(target).Safety(target, target)
-	
 	+
 	
 	% Cruise control interactions
@@ -118,12 +116,12 @@ proc CruiseControl(vcs:sVirtualCarState) =
 % Process definition
 % --------------------
 init
-	allow(
-		{ aCar, aCC, aVCS, s2c_VCS, c2s_VCS },
-	comm(
-		{ 
-			recv_s2c_VCS | send_s2c_VCS -> s2c_VCS, 		% Communicates VCS from safety to CC
-			recv_c2s_VCS | send_c2s_VCS -> c2s_VCS		% Communicates VCS from CC to safety
-		},
-		Safety(Off, Off) || CruiseControl(Off)
-		));
+	allow({ 
+		aCar, aBattery, aCC, aVCS, s2c_VCS, c2s_VCS 
+	},
+	comm({ 
+		recv_s2c_VCS | send_s2c_VCS -> s2c_VCS, 		% Communicates VCS from safety to CC
+		recv_c2s_VCS | send_c2s_VCS -> c2s_VCS		% Communicates VCS from CC to safety
+	},
+	Safety(Off, Off) || CruiseControl(Off)
+	));
