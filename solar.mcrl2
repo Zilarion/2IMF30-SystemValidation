@@ -12,32 +12,34 @@ sort
 	sCCState = struct Enable | Disable;
 	sVirtualCarState = struct On | Off | CC;
 
+sort
+	sMessage = struct sPedalState | sDNRPState | sCarState | sBatteryState | sCCThreshold | sTurnOffThreshold | sDirection | sCCState | sVirtualCarState;
 % --------------------
 % Action declarations
 % --------------------
 act
 	% Input actions from the user and environment
-  aGasPeddal : sPedalState;
-  aBrakePeddal : sPedalState;
-  aDNRP : sDNRPState;
-  aCar : sCarState;
-  aBattery : sBatteryState;
-  aSpeed : sCCThreshold # sTurnOffThreshold # sDirection;
-  aCC : sCCState;
+  	aGasPeddal : sPedalState;
+  	aBrakePeddal : sPedalState;
+  	aDNRP : sDNRPState;
+  	aCar : sCarState;
+  	aBattery : sBatteryState;
+  	aSpeed : sCCThreshold # sTurnOffThreshold # sDirection;
+  	aCC : sCCState;
 
-  % Output actions
-  aVCS : sVirtualCarState;
-  aMotororce : sDirection;
+  	% Output actions
+  	aVCS : sVirtualCarState;
+  	aMotororce : sDirection;
 
 % --------------------
 % Communicating action declarations
 % --------------------
 act 
-	% Used for communication from VCS from safety to CC
+	% Used for communication from safety to CC
 	recv_s2c_VCS,
 	send_s2c_VCS, 
 	s2c_VCS, 				
-	% Used for communication from CC from safety to VCS			
+	% Used for communication from CC to safety		
 	recv_c2s_VCS, 
 	send_c2s_VCS, 
 	c2s_VCS : sVirtualCarState;					
@@ -45,12 +47,12 @@ act
 % --------------------
 % Safety Procedure
 % --------------------
-proc Safety(vcs:sVirtualCarState) =
+proc Safety(vcs:sVirtualCarState, target:sVirtualCarState) =
 	% Car button interactions
 	% The car is turned on
 	aCar(SwitchOn).
 		(vcs==Off) ->
-			aVCS(On).(send_s2c_VCS(On).Safety(On) + Safety(On).send_s2c_VCS(On).Safety(On))
+			Safety(vcs, On)
 		<> 
 		Safety(vcs)
 	+
@@ -58,24 +60,29 @@ proc Safety(vcs:sVirtualCarState) =
 	% The car is turned off
 	aCar(SwitchOff).
 		((vcs==On || vcs==CC)) ->
-			aVCS(Off).(send_s2c_VCS(Off).Safety(Off) + Safety(Off).send_s2c_VCS(Off).Safety(Off))
+			Safety(vcs, Off)
 		<> 
 		Safety(vcs)
 	
 	+
-
+	
+	(target != None) ->
+		send_s2c_VCS(target).aVCS(target).Safety(target, None)
+	
+	+
+	
 	% Cruise control interactions
 	sum recv:sVirtualCarState.recv_c2s_VCS(recv).
 		% Cruise control components requests to turn on CC
 		(recv==CC && vcs==On) ->
-			send_s2c_VCS(recv).Safety(recv)
+			Safety(vcs, recv)
 		<> 
 		% Cruise control component requests to turn off CC
 		(recv==On && vcs==CC) ->
-			send_s2c_VCS(recv).Safety(recv)
+			Safety(vcs, recv)
 		<>
 		% Request has been denied, no change applied but the unchanged state is send back
-			send_s2c_VCS(vcs).Safety(vcs);
+			Safety(vcs, vcs);
 
 
 % --------------------
@@ -111,8 +118,8 @@ init
 		{ aCar, aCC, aVCS, s2c_VCS, c2s_VCS },
 	comm(
 		{ 
-			recv_s2c_VCS | send_s2c_VCS -> s2c_VCS, 						% Communicates VCS from safety to CC
-			recv_c2s_VCS | send_c2s_VCS -> c2s_VCS 							% Communicates VCS from CC to safety
+			recv_s2c_VCS | send_s2c_VCS -> s2c_VCS, 		% Communicates VCS from safety to CC
+			recv_c2s_VCS | send_c2s_VCS -> c2s_VCS		% Communicates VCS from CC to safety
 		},
 		Safety(Off) || CruiseControl(Off)
 		));
