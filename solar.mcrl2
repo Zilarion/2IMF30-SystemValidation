@@ -12,80 +12,97 @@ sort
 	sCCState = struct Enable | Disable;
 	sVirtualCarState = struct On | Off | CC;
 
+sort
+	sMessage = struct sPedalState | sDNRPState | sCarState | sBatteryState | sCCThreshold | sTurnOffThreshold | sDirection | sCCState | sVirtualCarState;
 % --------------------
 % Action declarations
 % --------------------
 act
 	% Input actions from the user and environment
-  aGasPeddal : sPedalState;
-  aBrakePeddal : sPedalState;
-  aDNRP : sDNRPState;
-  aCar : sCarState;
-  aBattery : sBatteryState;
-  aSpeed : sCCThreshold # sTurnOffThreshold # sDirection;
-  aCC : sCCState;
+  	aGasPeddal : sPedalState;
+  	aBrakePeddal : sPedalState;
+  	aDNRP : sDNRPState;
+  	aCar : sCarState;
+  	aBattery : sBatteryState;
+  	aSpeed : sCCThreshold # sTurnOffThreshold # sDirection;
+  	aCC : sCCState;
 
-  % Output actions
-  aVCS : sVirtualCarState;
-  aMotororce : sDirection;
+  	% Output actions
+  	aVCS : sVirtualCarState;
+  	aMotororce : sDirection;
 
 % --------------------
 % Communicating action declarations
 % --------------------
 act 
-	% Used for communication from VCS from safety to CC
+	% Used for communication from safety to CC
 	recv_s2c_VCS,
 	send_s2c_VCS, 
 	s2c_VCS, 				
-	% Used for communication from CC from safety to VCS			
+	% Used for communication from CC to safety		
 	recv_c2s_VCS, 
 	send_c2s_VCS, 
-	c2s_VCS : sVirtualCarState;
-	obtain_vcs_lock, give_vcs_lock, transfer_vcs_lock;
+	c2s_VCS : sVirtualCarState;					
 
 % --------------------
 % Safety Procedure
 % --------------------
-proc Safety(vcs:sVirtualCarState) =
+proc Safety(vcs:sVirtualCarState, target:sVirtualCarState) =
 	% Car button interactions
-	obtain_vcs_lock.(sum btn:sCarState.aCar(btn).
-		% The car is turned on
-		(vcs==Off && btn==SwitchOn) ->
-			aVCS(On).send_s2c_VCS(On).Safety(On)
+	% The car is turned on
+	aCar(SwitchOn).
+		(vcs==Off) ->
+			Safety(vcs, On)
 		<> 
-			% The car is turned off
-			((vcs==On || vcs==CC) && btn==SwitchOff) ->
-				aVCS(Off).send_s2c_VCS(Off).Safety(Off)
-			<> 
-				send_s2c_VCS(vcs).Safety(vcs)
-	)
+		Safety(vcs)
 	+
-
+	
+	% The car is turned off
+	aCar(SwitchOff).
+		((vcs==On || vcs==CC)) ->
+			Safety(vcs, Off)
+		<> 
+		Safety(vcs)
+	
+	+
+	
+	(target != None) ->
+		send_s2c_VCS(target).aVCS(target).Safety(target, None)
+	
+	+
+	
 	% Cruise control interactions
-	give_vcs_lock.(sum recv:sVirtualCarState.recv_c2s_VCS(recv).
-		aVCS(recv).Safety(recv)
-	);
+	sum recv:sVirtualCarState.recv_c2s_VCS(recv).
+		% Cruise control components requests to turn on CC
+		(recv==CC && vcs==On) ->
+			Safety(vcs, recv)
+		<> 
+		% Cruise control component requests to turn off CC
+		(recv==On && vcs==CC) ->
+			Safety(vcs, recv)
+		<>
+		% Request has been denied, no change applied but the unchanged state is send back
+			Safety(vcs, vcs);
 
 
 % --------------------
 % Cruise control procedure
 % --------------------
 proc CruiseControl(vcs:sVirtualCarState) = 
-	obtain_vcs_lock.(aCC(Enable).
-	%TODO: add additional constrains on when CC is allowed to be turned on 
+	aCC(Enable).
+	%TODO: add additional constrains on when CC is allowed to be turned on
 		(vcs==On) ->
-			send_c2s_VCS(CC).CruiseControl(CC)
+			send_c2s_VCS(CC).sum recv:sVirtualCarState.(recv_s2c_VCS(recv).CruiseControl(recv))
 		<>
-			send_c2s_VCS(vcs).CruiseControl(vcs)
-		+
-		aCC(Disable).
-		(vcs==CC) ->
-			send_c2s_VCS(On).CruiseControl(On)
-		<>
-			send_c2s_VCS(vcs).CruiseControl(vcs)
-	)
+			CruiseControl(vcs)
 	+
-	give_vcs_lock.(sum newState:sVirtualCarState.recv_s2c_VCS(newState).CruiseControl(newState));
+	aCC(Disable).
+		(vcs==CC) ->
+			send_c2s_VCS(On).sum recv:sVirtualCarState.(recv_s2c_VCS(recv).CruiseControl(recv))
+		<>
+	  		CruiseControl(vcs)
+	+
+	sum newState:sVirtualCarState.recv_s2c_VCS(newState).CruiseControl(newState);
 	%TODO add additional checks on conditions that can disable CC
 
 % --------------------
@@ -98,12 +115,11 @@ proc CruiseControl(vcs:sVirtualCarState) =
 % --------------------
 init
 	allow(
-		{ aCar, aCC, aVCS, s2c_VCS, c2s_VCS, transfer_vcs_lock },
+		{ aCar, aCC, aVCS, s2c_VCS, c2s_VCS },
 	comm(
 		{ 
-			recv_s2c_VCS | send_s2c_VCS -> s2c_VCS, 						% Communicates VCS from safety to CC
-			recv_c2s_VCS | send_c2s_VCS -> c2s_VCS, 						% Communicates VCS from CC to safety
-			obtain_vcs_lock | give_vcs_lock -> transfer_vcs_lock% Lock changing the VCS
+			recv_s2c_VCS | send_s2c_VCS -> s2c_VCS, 		% Communicates VCS from safety to CC
+			recv_c2s_VCS | send_c2s_VCS -> c2s_VCS		% Communicates VCS from CC to safety
 		},
 		Safety(Off) || CruiseControl(Off)
 		));
