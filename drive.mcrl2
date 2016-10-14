@@ -1,0 +1,103 @@
+% --------------------
+% Sort declarations
+% --------------------
+sort 
+	sPedalState = struct Pressed | Released;
+	sDNRPState = struct D | R | NP;
+	sCarState = struct SwitchOn | SwitchOff;
+	sBatteryState = struct Unsafe | Safe | Full;
+	sCCThreshold = struct BelowCCmin | AboveCCmin;
+	sTurnOffThreshold = struct BelowTurnOffMax | AboveTurnOffMax;
+	sDirection = struct Forwards | Backwards | Static;
+	sCCState = struct Enable | Disable;
+	sVirtualCarState = struct On | Off | CC;
+
+sort
+	sMessage = struct sPedalState | sDNRPState | sCarState | sBatteryState | sCCThreshold | sTurnOffThreshold | sDirection | sCCState | sVirtualCarState;
+
+map opposite: sDirection -> sDirection;
+eqn
+	opposite(Forwards) = Backwards;
+	opposite(Static) = Static;
+	opposite(Backwards) = Forwards;
+	
+% --------------------
+% Action declarations
+% --------------------
+act
+	% Input actions from the user and environment
+  	aGasPedal : sPedalState;
+  	aBrakePedal : sPedalState;
+  	aDNRP : sDNRPState;
+  	aCar : sCarState;
+  	aBattery : sBatteryState;
+  	aSpeed : sCCThreshold # sTurnOffThreshold # sDirection;
+  	aCC : sCCState;
+
+  	% Output actions
+  	aVCS : sVirtualCarState;
+  	aMotorForce : sDirection;
+
+% --------------------
+% Drive procedure
+% i_name -> input variable
+% m_name -> state variable
+% --------------------
+proc MotorForce(m_vcs:sVirtualCarState, m_dnrp:sDNRPState, m_dir:sDirection, m_gas:sPedalState, m_brake:sPedalState, m_battery:sBatteryState) = 
+	ApplyMotorForce(m_vcs, m_dnrp, m_dir, m_gas, m_brake, m_battery).(
+		sum i_vcs:sVirtualCarState.aVCS(i_vcs).MotorForce(i_vcs, m_dnrp, m_dir, m_gas, m_brake, m_battery) + 
+		sum i_dnrp:sDNRPState.aDNRP(i_dnrp).MotorForce(m_vcs, i_dnrp, m_dir, m_gas, m_brake, m_battery) + 
+		sum i_gas:sPedalState.aGasPedal(i_gas).MotorForce(m_vcs, m_dnrp, m_dir, i_gas, m_brake, m_battery) + 
+		sum i_brake:sPedalState.aBrakePedal(i_brake).MotorForce(m_vcs, m_dnrp, m_dir, m_gas, i_brake, m_battery) + 
+		sum i_battery:sBatteryState.MotorForce(m_vcs, m_dnrp, m_dir, m_gas, m_brake, i_battery) + 
+		sum i_dir:sDirection.sum i_tot:sTurnOffThreshold.sum i_cct:sCCThreshold.aSpeed(i_cct, i_tot, i_dir).MotorForce(m_vcs, m_dnrp, i_dir, m_gas, m_brake, m_battery)
+	); 
+
+proc ApplyMotorForce(m_vcs:sVirtualCarState, m_dnrp:sDNRPState, m_dir:sDirection, m_gas:sPedalState, m_brake:sPedalState, m_battery:sBatteryState) = 
+	% Never drive when the car is Off, or when the battery is too emtpy (Unsafe)
+	(m_vcs == Off || m_battery == Unsafe) -> 
+		aMotorForce(Static)
+	<> (m_vcs == CC) ->
+		% TODO Should we also check DNRP states when applying CC?
+		% Note that CC module should also so this.
+		aMotorForce(Forwards)
+	<> (m_dnrp == NP ) -> %from here on: m_vcs == On
+		aMotorForce(Static)
+	<> (m_dnrp == D) ->
+		(m_brake == Pressed) -> %ignore gas
+			(m_battery == Full) ->
+				aMotorForce(Static)
+			<>
+				aMotorForce(opposite(m_dir))
+		<> (m_gas == Pressed) -> % only gas is pressed
+			(m_battery == Full && m_dir == Backwards) ->
+				aMotorForce(Static)
+			<>
+				aMotorForce(Forwards)
+		<> %Neither gas not brake is pressed
+			aMotorForce(Static)
+	<> %(m_dnrp == R)
+		(m_brake == Pressed) -> %ignore gas
+			(m_battery == Full) ->
+				aMotorForce(Static)
+			<>
+				aMotorForce(opposite(m_dir))
+		<> (m_gas == Pressed) -> % only gas is pressed
+			(m_battery == Full && m_dir == Forwards) ->
+				aMotorForce(Static)
+			<>
+				aMotorForce(Backwards)
+		<> %Neither gas not brake is pressed
+			aMotorForce(Static)
+; %End of ApplyMotorForce
+% --------------------
+% Process definition
+% --------------------
+init
+	allow(
+		{ aVCS, aMotorForce,  aGasPedal, aBrakePedal, aDNRP, aBattery, aSpeed},
+	comm(
+		{ 
+		},
+		 MotorForce(Off, NP, Static, Released, Released, Full)
+		));
