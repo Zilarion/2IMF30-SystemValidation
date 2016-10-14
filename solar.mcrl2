@@ -14,6 +14,13 @@ sort
 	sVirtualCarState = struct On | Off;
 	sBrakeLighting = struct LightOn | LightOff;
 
+	
+map opposite: sDirection -> sDirection;
+eqn
+	opposite(Forwards) = Backwards;
+	opposite(Static) = Static;
+	opposite(Backwards) = Forwards;
+
 % --------------------
 % Action declarations
 % --------------------
@@ -29,7 +36,7 @@ act
 
   	% Output actions
   	aVCS : sVirtualCarState;
-  	aMotorforce : sDirection;
+  	aMotorForce : sDirection;
 	aBrakeLighting: sBrakeLighting;
 	aCCActive: sCCState;
 
@@ -118,25 +125,83 @@ proc Lighting(state:sVirtualCarState) =
 
 % --------------------
 % Drive procedure
+% i_name -> input variable
+% m_name -> state variable
 % --------------------
-proc Drive(state: sVirtualCarState) = 
-	sum data:sVirtualCarState.r_VCS_drive(data).Drive(data)
+proc MotorForce(m_vcs:sVirtualCarState, m_dnrp:sDNRPState, m_dir:sDirection, m_gas:sPedalState, m_brake:sPedalState, m_battery:sBatteryState) = 
+	ApplyMotorForce(m_vcs, m_dnrp, m_dir, m_gas, m_brake, m_battery).(
+		sum i_vcs:sVirtualCarState.aVCS(i_vcs).MotorForce(i_vcs, m_dnrp, m_dir, m_gas, m_brake, m_battery) + 
+		sum i_dnrp:sDNRPState.aDNRP(i_dnrp).MotorForce(m_vcs, i_dnrp, m_dir, m_gas, m_brake, m_battery) + 
+		sum i_gas:sPedalState.aGasPedal(i_gas).MotorForce(m_vcs, m_dnrp, m_dir, i_gas, m_brake, m_battery) + 
+		sum i_brake:sPedalState.aBrakePedal(i_brake).MotorForce(m_vcs, m_dnrp, m_dir, m_gas, i_brake, m_battery) + 
+		sum i_battery:sBatteryState.MotorForce(m_vcs, m_dnrp, m_dir, m_gas, m_brake, i_battery) + 
+		sum i_dir:sDirection.sum i_tot:sTurnOffThreshold.sum i_cct:sCCThreshold.aSpeed(i_cct, i_tot, i_dir).MotorForce(m_vcs, m_dnrp, i_dir, m_gas, m_brake, m_battery)
+	); 
 	
-	% Process CC messages
-	+ sum data:sCCState.r_ccEnable(data).
-		aCCActive(data);
+proc ApplyMotorForce(m_vcs:sVirtualCarState, m_dnrp:sDNRPState, m_dir:sDirection, m_gas:sPedalState, m_brake:sPedalState, m_battery:sBatteryState) = 
+	% Never drive when the car is Off, or when the battery is too emtpy (Unsafe)
+	(m_vcs == Off || m_battery == Unsafe) -> 
+		aMotorForce(Static)
+	<> (m_vcs == CC) ->
+		% TODO Should we also check DNRP states when applying CC?
+		% Note that CC module should also so this.
+		aMotorForce(Forwards)
+	<> (m_dnrp == NP ) -> %from here on: m_vcs == On
+		aMotorForce(Static)
+	<> (m_dnrp == D) ->
+		(m_brake == Pressed) -> %ignore gas
+			(m_battery == Full) ->
+				aMotorForce(Static)
+			<>
+				aMotorForce(opposite(m_dir))
+		<> (m_gas == Pressed) -> % only gas is pressed
+			(m_battery == Full && m_dir == Backwards) ->
+				aMotorForce(Static)
+			<>
+				aMotorForce(Forwards)
+		<> %Neither gas not brake is pressed
+			aMotorForce(Static)
+	<> %(m_dnrp == R)
+		(m_brake == Pressed) -> %ignore gas
+			(m_battery == Full) ->
+				aMotorForce(Static)
+			<>
+				aMotorForce(opposite(m_dir))
+		<> (m_gas == Pressed) -> % only gas is pressed
+			(m_battery == Full && m_dir == Forwards) ->
+				aMotorForce(Static)
+			<>
+				aMotorForce(Backwards)
+		<> %Neither gas not brake is pressed
+			aMotorForce(Static)
+; %End of ApplyMotorForce
 
 % --------------------
 % Process definition
 % --------------------
+%init
+%	allow(
+%		{ aCar, aCC, aVCS, s2c_VCS, c2s_VCS },
+%	comm(
+%		{ 
+%			recv_s2c_VCS | send_s2c_VCS -> s2c_VCS, 		% Communicates VCS from safety to CC
+%			recv_c2s_VCS | send_c2s_VCS -> c2s_VCS		% Communicates VCS from CC to safety
+%		},
+%		Safety(Off) || CruiseControl(Off)
+%		));
+
 init
 	allow({ 
-		aCar, aBrakeLighting, aBattery, aCC, aVCS, 
-		c_VCS, c_ccEnable
-	},
-	comm({ 
-		s_VCS | r_VCS_steer | r_VCS_drive | r_VCS_light -> c_VCS,
-		s_ccEnable | r_ccEnable -> c_ccEnable
-	},
-	Safety(safetyOff, safetyNull) || Lighting(Off) || Drive(Off) || Steering(steeringOff)
-	));
+		{ aVCS, 
+		aMotorForce,  
+		aGasPedal, 
+		aBrakePedal, 
+		aDNRP, 
+		aBattery, 
+		aSpeed},
+	comm(
+		{ recv_s2c_VCS | send_s2c_VCS -> s2c_VCS, 		% Communicates VCS from safety to CC
+			recv_c2s_VCS | send_c2s_VCS -> c2s_VCS		% Communicates VCS from CC to safety
+		},
+		 MotorForce(Off, NP, Static, Released, Released, Full)
+		));
