@@ -128,23 +128,26 @@ proc Lighting(state:sVirtualCarState) =
 % i_name -> input variable
 % m_name -> state variable
 % --------------------
-proc MotorForce(m_vcs:sVirtualCarState, m_dnrp:sDNRPState, m_dir:sDirection, m_gas:sPedalState, m_brake:sPedalState, m_battery:sBatteryState) = 
-	ApplyMotorForce(m_vcs, m_dnrp, m_dir, m_gas, m_brake, m_battery).(
-		sum i_vcs:sVirtualCarState.aVCS(i_vcs).MotorForce(i_vcs, m_dnrp, m_dir, m_gas, m_brake, m_battery) + 
-		sum i_dnrp:sDNRPState.aDNRP(i_dnrp).MotorForce(m_vcs, i_dnrp, m_dir, m_gas, m_brake, m_battery) + 
-		sum i_gas:sPedalState.aGasPedal(i_gas).MotorForce(m_vcs, m_dnrp, m_dir, i_gas, m_brake, m_battery) + 
-		sum i_brake:sPedalState.aBrakePedal(i_brake).MotorForce(m_vcs, m_dnrp, m_dir, m_gas, i_brake, m_battery) + 
-		sum i_battery:sBatteryState.MotorForce(m_vcs, m_dnrp, m_dir, m_gas, m_brake, i_battery) + 
-		sum i_dir:sDirection.sum i_tot:sTurnOffThreshold.sum i_cct:sCCThreshold.aSpeed(i_cct, i_tot, i_dir).MotorForce(m_vcs, m_dnrp, i_dir, m_gas, m_brake, m_battery)
+proc MotorForce(m_vcs:sVirtualCarState, m_dnrp:sDNRPState, m_dir:sDirection, m_gas:sPedalState, m_brake:sPedalState, m_battery:sBatteryState, m_ccstate:sCCState) = 
+	ApplyMotorForce(m_vcs, m_dnrp, m_dir, m_gas, m_brake, m_battery, m_ccstate).(
+		sum i_vcs:sVirtualCarState.aVCS(i_vcs).				MotorForce(m_vcs = i_vcs) + 
+		sum i_ccstate:sCCState.aCCActive(i_ccstate).	MotorForce(m_ccstate = i_ccstate) + 
+		sum i_dnrp:sDNRPState.aDNRP(i_dnrp).					MotorForce(m_dnrp = i_dnrp) + 
+		sum i_gas:sPedalState.aGasPedal(i_gas).				MotorForce(m_gas = i_gas) + 
+		sum i_brake:sPedalState.aBrakePedal(i_brake).	MotorForce(m_brake = i_brake) + 
+		sum i_battery:sBatteryState.									MotorForce(m_battery = i_battery) + 
+		sum i_dir:sDirection.sum i_tot:sTurnOffThreshold.sum i_cct:sCCThreshold.aSpeed(i_cct, i_tot, i_dir).
+																									MotorForce(m_dir = i_dir)
 	); 
 	
-proc ApplyMotorForce(m_vcs:sVirtualCarState, m_dnrp:sDNRPState, m_dir:sDirection, m_gas:sPedalState, m_brake:sPedalState, m_battery:sBatteryState) = 
+proc ApplyMotorForce(m_vcs:sVirtualCarState, m_dnrp:sDNRPState, m_dir:sDirection, m_gas:sPedalState, m_brake:sPedalState, m_battery:sBatteryState, m_ccstate:sCCState) = 
 	% Never drive when the car is Off, or when the battery is too emtpy (Unsafe)
 	(m_vcs == Off || m_battery == Unsafe) -> 
 		aMotorForce(Static)
-	<> (m_vcs == CC) ->
+	<> (m_ccstate == Enabled) ->
 		% TODO Should we also check DNRP states when applying CC?
 		% Note that CC module should also so this.
+		% Second note: should we check on battery safety level?
 		aMotorForce(Forwards)
 	<> (m_dnrp == NP ) -> %from here on: m_vcs == On
 		aMotorForce(Static)
@@ -192,16 +195,13 @@ proc ApplyMotorForce(m_vcs:sVirtualCarState, m_dnrp:sDNRPState, m_dir:sDirection
 
 init
 	allow({ 
-		{ aVCS, 
+		aVCS, 
 		aMotorForce,  
 		aGasPedal, 
 		aBrakePedal, 
 		aDNRP, 
 		aBattery, 
-		aSpeed},
-	comm(
-		{ recv_s2c_VCS | send_s2c_VCS -> s2c_VCS, 		% Communicates VCS from safety to CC
-			recv_c2s_VCS | send_c2s_VCS -> c2s_VCS		% Communicates VCS from CC to safety
+		aSpeed
 		},
-		 MotorForce(Off, NP, Static, Released, Released, Full)
-		));
+		 MotorForce(Off, NP, Static, Released, Released, Full, Disabled)
+		);
