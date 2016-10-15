@@ -1,4 +1,4 @@
 % Requirement 1
-% After a Car(SwitchOn) action a VirtualCarState(On) should occur within a finite amount of steps and before a Car(SwitchOff) action is seen.
+% After a Car(SwitchOn) action a VirtualCarState(On) should occur within a finite amount of steps unless canceled by a Car(SwitchOff) action.
 
-[true* . aCar(SwitchOn)] mu X.([aVCS(On)] X && <true>true && <aCar(SwitchOff)>false)
+[true* . aCar(SwitchOn)] mu X.(([aVCS(On)] X && <true>true) || <aCar(SwitchOff)>true)
