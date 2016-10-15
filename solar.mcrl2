@@ -69,9 +69,10 @@ proc Safety(state:safetyState, target:safetyState) =
 		(target==safetyOff) ->
 			s_VCS(Off).aVCS(Off)
 		).Safety(target, safetyNull)
-	
+	<> % If all states have been changes, do other things
+
 	% Car on/off button interactions
-	+ sum btn:sOnOffButton.aCar(btn).
+	sum btn:sOnOffButton.aCar(btn).
 		% The car is turned on
 		(btn == SwitchOn && state==safetyOff) ->
 			Safety(target=safetyOn)
@@ -218,7 +219,11 @@ proc Drive(state: driveState, speed:speedState, dir:sDirection, dnrp:sDNRPState,
 % --------------------
 init % TODO hide all but (comm and) output actions?
 	allow({ 
-		aCar, aBrakeLighting, aBattery, aCC, aVCS, aCCActive, aMotorForce,
+		% Input actions
+		aGasPedal, aBrakePedal, aDNRP, aCar, aBattery, aDirection, aCCSpeed, aTurnOffSpeed, aCC, 
+		% Output actions
+		aVCS, aMotorForce, aBrakeLighting, aCCActive,
+		% Communication actions
 		c_VCS, c_ccEnable, c_battery
 	},
 	comm({ 
