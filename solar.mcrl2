@@ -14,6 +14,11 @@ sort
 	sVirtualCarState = struct On | Off;
 	sBrakeLighting = struct LightOn | LightOff;
 
+map opposite: sDirection -> sDirection;
+eqn opposite(Forwards) = Backwards;
+    opposite(Static) = Static;
+    opposite(Backwards) = Forwards;
+
 % --------------------
 % Action declarations
 % --------------------
@@ -76,19 +81,20 @@ proc Safety(state:safetyState, target:safetyState) =
 % Steering procedure
 % --------------------
 sort steeringState = struct steeringOn | steeringOff | steeringNull;
+act steeringChange:steeringState;
 
-proc Steering(state:steeringState) =
+proc Steering(state:steeringState, target:steeringState) =
 	% Process state changes
-	%(target != steeringNull) ->
-	%	Steering(target, steeringNull)
+	(target != steeringNull) ->
+		steeringChange(target).Steering(target, steeringNull)
 	
 	% Process messages
-	sum data:sVirtualCarState.r_VCS_steer(data).
+	+ sum data:sVirtualCarState.r_VCS_steer(data).
 		(data==On) ->
-			Steering(steeringOn)
+			Steering(target=steeringOn)
 		<>	
 		(data==Off) ->
-			Steering(steeringOff)	
+			Steering(target=steeringOff)	
 	
 	% Interactions only possible when active
 	+ (state==steeringOn) -> (
@@ -119,12 +125,27 @@ proc Lighting(state:sVirtualCarState) =
 % --------------------
 % Drive procedure
 % --------------------
-proc Drive(state: sVirtualCarState) = 
-	sum data:sVirtualCarState.r_VCS_drive(data).Drive(data)
+sort driveState = struct driveCC | driveCCAvailable | driveOn | driveOff | driveNull;
+act driveChange:driveState;
+
+proc Drive(state: driveState, target: driveState) = 
+	% Process state changes
+	(target != driveNull) ->
+		driveChange(target).Drive(target, driveNull)
 	
-	% Process CC messages
-	+ sum data:sCCState.r_ccEnable(data).
-		aCCActive(data);
+	% Process VCS updates
+	+ sum data:sVirtualCarState.r_VCS_drive(data).
+		(data==On) ->
+			Drive(target=driveOn)
+		<>
+		(data==Off) ->
+			Drive(target=driveOff)
+
+	% Handle state changes when on
+	+ (state==driveOn) ->
+		% Process CC messages
+		sum data:sCCState.r_ccEnable(data).
+			aCCActive(data);
 
 % --------------------
 % Process definition
@@ -138,5 +159,5 @@ init
 		s_VCS | r_VCS_steer | r_VCS_drive | r_VCS_light -> c_VCS,
 		s_ccEnable | r_ccEnable -> c_ccEnable
 	},
-	Safety(safetyOff, safetyNull) || Lighting(Off) || Drive(Off) || Steering(steeringOff)
+	Safety(safetyOff, safetyNull) || Lighting(Off) || Drive(driveOff, driveNull) || Steering(steeringOff, steeringNull)
 	));
