@@ -1,0 +1,4 @@
+% Requirement 8
+% After a DNRP(NP) action a MotorForce(Static) should occur within a finite amount of steps.
+
+[true* . aDNRP(NP)]mu X.(([true] X && <true>true) || <aMotorForce(Static)>true)

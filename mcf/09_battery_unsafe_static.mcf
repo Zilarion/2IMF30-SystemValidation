@@ -1,0 +1,4 @@
+% Requirement 9
+% After a Battery(Unsafe) action a MotorForce(Static) should occur within a finite amount of steps.
+
+[true* . aBattery(Unsafe)]mu X.([aMotorForce(Static)] X && <true>true)
