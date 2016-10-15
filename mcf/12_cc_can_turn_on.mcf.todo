@@ -1,0 +1,11 @@
+% Requirement 12
+% When the aCCSpeed(AboveCCmin) action occured followed by the aCC(Enable) action there should be a path in which the cruise control is turned on.
+
+% When speed is above threshold
+[true* . aCCSpeed(AboveCCmin)]
+
+% And we see a CC enable, and no speed below threshold
+mu X.(([aCC(Enable)]X && <true>true) || <aCCSpeed(belowCCmin)>true)
+
+% Then we want to see that the cruise control is turned on in a finite amount of steps, unless the speed drops below the threshold or a CC disable is seen.
+mu Y.(([aCCActive(Enabled)] Y && <true>true) || <aCCActive(Disabled)>true || <aCCSpeed(belowCCmin)>true)
