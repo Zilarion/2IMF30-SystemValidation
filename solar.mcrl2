@@ -61,25 +61,24 @@ act s_battery, r_battery, c_battery : sBatteryState;
 sort safetyState = struct safetyOn | safetyOff | safetyNull;
 
 proc Safety(state:safetyState, target:safetyState) =
-	% State changes
+	% Send state changes
 	(target != safetyNull) ->
 		((target==safetyOn) ->
-			s_VCS(On).aVCS(On)
+			s_VCS(On)
 		<>
 		(target==safetyOff) ->
-			s_VCS(Off).aVCS(Off)
+			s_VCS(Off)
 		).Safety(target, safetyNull)
-	<> % If all states have been changes, do other things
 
 	% Car on/off button interactions
-	sum btn:sOnOffButton.aCar(btn).
+	+ sum btn:sOnOffButton.aCar(btn).
 		% The car is turned on
 		(btn == SwitchOn && state==safetyOff) ->
-			Safety(target=safetyOn)
+			aVCS(On).Safety(target=safetyOn)
 		<> 
 		% The car is turned off
 		(btn == SwitchOff && state==safetyOn) ->
-			Safety(target=safetyOff)
+			aVCS(Off).Safety(target=safetyOff)
 		<> 
 		% We don't have to change anything
 		Safety()
@@ -87,7 +86,7 @@ proc Safety(state:safetyState, target:safetyState) =
 	% Interactions only possible when uC is on
 	+ (state==safetyOn) ->
 		% Battery is unsafe, turn off!
-		aBattery(Unsafe).Safety(target=safetyOff);
+		aBattery(Unsafe).aVCS(Off).Safety(target=safetyOff);
 
 
 % --------------------
