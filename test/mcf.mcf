@@ -1,0 +1,44 @@
+%[true*.aCar(SwitchOn)]mu X.( ( [(!aCar(SwitchOff))*]X && <true>true ) || <aVCS(On)>true )
+
+
+% Eventueel Requirements aanpassen? Zo is REQ 1 volgens ons document alleen [true*.aCar(SwitchOn)]<aVCS(On)>true want After Car(On) VCS(On) should happen.
+
+% REQ 1, voldoet aan test scenario's
+%[true*.aCar(SwitchOn)]<(!( aCar(SwitchOff) || aVCS(Off) ))*.aVCS(On)>true
+
+% REQ 2 multistate, parked how do I do this?
+
+% REQ 3 similar to REQ 1
+
+% REQ 4 similar to REQ 1, alleen arbitrary vollegorde /parked
+
+% REQ 5 parked
+
+% REQ 6, complies to testing scenarios
+% [true*.aDNRP(D)]<(!( aDNRP(R) || aDNRP(NP) ))*.aGasPedal(Pressed).(!( aDNRP(R) || aDNRP(NP) ))*.aMotorForce(Forwards)>true
+
+% REQ 7, not tested but similar to REQ 6
+% [true*.aDNRP(R)]<(!( aDNRP(D) || aDNRP(NP) ))*.aGasPedal(Pressed).(!( aDNRP(D) || aDNRP(NP) ))*.aMotorForce(Backwards)>true
+
+% REQ 8, not tested but similar to REQ 6 (maybe make test scenario)
+% [true*.aDNRP(NP)]<(!( aDNRP(D) || aDNRP(R) ))*.aMotorForce(Static)>true
+
+% REQ 9, not tested but similar to REQ 8 (Is the battery not allowed to be full?)
+% [true*.aBattery(Unsafe)]<(!( aBattery(Safe) || aBattery(Full) ))*.aMotorForce(Static)>true
+
+% REQ 10, not tested but similar to REQ 8 (Is the battery not allowed to be full?)
+% [true*.aBattery(Unsafe)]<(!( aBattery(Safe) || aBattery(Full) ))*.aVCS(Off)>true
+
+% REQ 11 multistate, parked how do I do this?
+
+% REQ 12 multistate, similar to REQ 11
+
+% REQ 13 multistate, similar to REQ 11
+
+% REQ 14 multistate, similar to REQ 11
+
+% REQ 15 multistate, similar to REQ 11
+
+% REQ 16 will add
+
+% REQ 17 will add
