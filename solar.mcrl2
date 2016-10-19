@@ -32,18 +32,67 @@ act
   	aBattery : sBatteryState;
   	aSpeed : sCCThreshold # sTurnOffThreshold # sDirection;
   	aCC : sCCButton;
-
+  	
   	% Output actions
-  	aVCS : sVirtualCarState;
+  	% Use c_VCS and c_CCActive instead when writing checking formulas
+  	%aVCS : sVirtualCarState;
   	aMotorForce : sDirection;
-	aCCActive: sCCState;
-
+		%aCCActive: sCCState;
+  	
 % --------------------
 % Communication definitions
 % --------------------
-act s_VCS, r_VCS_steer, r_VCS_light, r_VCS_MF, c_VCS : sVirtualCarState;
-act s_ccEnable, r_ccEnable_MF, c_ccEnable: sCCState;
-act s_Battery, r_Battery_MF, c_Battery: sBatteryState;
+
+  % All input actions are serialized via an InputHandler process
+  % This serialization ensures that all parallel components
+  % process the actions in the same order. Below are the
+  % communication action definitions.
+  	
+  	c_GasPedal : sPedalState;
+  	c_BrakePedal : sPedalState;
+  	c_DNRP : sDNRPState;
+  	c_Car : sOnOffButton;
+  	c_Battery : sBatteryState;
+  	c_Speed : sCCThreshold # sTurnOffThreshold # sDirection;
+  	c_CC : sCCButton;
+  	
+  	s_GasPedal : sPedalState;
+  	s_BrakePedal : sPedalState;
+  	s_DNRP : sDNRPState;
+  	s_Car : sOnOffButton;
+  	s_Battery : sBatteryState;
+  	s_Speed : sCCThreshold # sTurnOffThreshold # sDirection;
+  	s_CC : sCCButton;
+  	
+  	r_GasPedal_MF : sPedalState;
+  	r_BrakePedal_MF : sPedalState;
+  	r_DNRP_MF : sDNRPState;
+  	r_Car_Safety : sOnOffButton;
+  	r_Battery_Safety : sBatteryState;
+  	r_Battery_MF : sBatteryState;
+  	r_Speed_MF : sCCThreshold # sTurnOffThreshold # sDirection;
+  	r_CC_Steering : sCCButton;
+
+		% Inter process communications
+		act s_VCS, r_VCS_steer, r_VCS_light, r_VCS_MF, c_VCS : sVirtualCarState;
+		act s_ccEnable, r_ccEnable_MF, c_ccEnable: sCCState;
+
+
+% --------------------
+% Input Handler
+% --------------------
+
+proc InputHandler = 
+(
+sum gas:sPedalState.aGasPedal(gas).s_GasPedal(gas) +
+sum brake:sPedalState.aBrakePedal(brake).s_BrakePedal(brake) +
+sum dnrp:sDNRPState.aDNRP(dnrp).s_DNRP(dnrp) +
+sum car:sOnOffButton.aCar(car).s_Car(car) +
+sum batt:sBatteryState.aBattery(batt).s_Battery(batt) +
+sum cc:sCCButton.aCC(cc).s_CC(cc) +
+sum ccthr:sCCThreshold.sum onoffthr:sTurnOffThreshold.sum dir:sDirection.aSpeed(ccthr, onoffthr, dir).s_Speed(ccthr, onoffthr, dir)
+).InputHandler;
+	
 % --------------------
 % Safety Procedure
 % --------------------
@@ -51,10 +100,10 @@ act s_Battery, r_Battery_MF, c_Battery: sBatteryState;
 proc Safety(state:sVirtualCarState, target:sVirtualCarState, battery:sBatteryState) =
 	
 	% State changes
-	s_VCS(target).aVCS(target).Safety(state=target)
+	s_VCS(target).Safety(state=target)
 	
 	% Car on/off button interactions
-	+ (sum btn:sOnOffButton.aCar(btn).
+	+ (sum btn:sOnOffButton.r_Car_Safety(btn).
 		% Turn the car on
 		(btn == SwitchOn && state==Off && battery!=Unsafe) ->
 			Safety(target=On)
@@ -68,10 +117,10 @@ proc Safety(state:sVirtualCarState, target:sVirtualCarState, battery:sBatterySta
 		Safety()
 		)
 		
-		+ aBattery(Unsafe).Safety(target=Off, battery=Unsafe)
-		+ aBattery(Safe).Safety(battery=Safe)
-		+ aBattery(Full).Safety(battery=Full)
-		+ s_Battery(battery).Safety();
+		+ r_Battery_Safety(Unsafe).Safety(target=Off, battery=Unsafe)
+		+ r_Battery_Safety(Safe).Safety(battery=Safe)
+		+ r_Battery_Safety(Full).Safety(battery=Full)
+;
 
 % --------------------
 % Steering procedure
@@ -96,7 +145,7 @@ proc Steering(state:steeringState) =
 	% Interactions only possible when active
 	+ (state==steeringOn) -> (
 		% Cruise control interactions
-		sum btn:sCCButton.aCC(btn).
+		sum btn:sCCButton.r_CC_Steering(btn).
 			% Do request to turn CC on
 			(btn==Enable) ->
 				s_ccEnable(Enabled).Steering()
@@ -115,12 +164,12 @@ proc MotorForce(m_vcs:sVirtualCarState, m_dnrp:sDNRPState, m_dir:sDirection, m_g
 	ApplyMotorForce(m_vcs, m_dnrp, m_dir, m_gas, m_brake, m_battery, m_ccstate).(
 		sum i_vcs:sVirtualCarState.	r_VCS_MF(i_vcs).							MotorForce(m_vcs = i_vcs) + 
 		sum i_ccstate:sCCState.			r_ccEnable_MF(i_ccstate).			MotorForce(m_ccstate = i_ccstate) + 
-		sum i_dnrp:sDNRPState.			aDNRP(i_dnrp).								MotorForce(m_dnrp = i_dnrp) + 
-		sum i_gas:sPedalState.			aGasPedal(i_gas).							MotorForce(m_gas = i_gas) + 
-		sum i_brake:sPedalState.		aBrakePedal(i_brake).					MotorForce(m_brake = i_brake) + 
+		sum i_dnrp:sDNRPState.			r_DNRP_MF(i_dnrp).								MotorForce(m_dnrp = i_dnrp) + 
+		sum i_gas:sPedalState.			r_GasPedal_MF(i_gas).							MotorForce(m_gas = i_gas) + 
+		sum i_brake:sPedalState.		r_BrakePedal_MF(i_brake).					MotorForce(m_brake = i_brake) + 
 		sum i_battery:sBatteryState.r_Battery_MF(i_battery).			MotorForce(m_battery = i_battery) + 
 		sum i_dir:sDirection.sum i_tot:sTurnOffThreshold.sum i_cct:sCCThreshold.
-																aSpeed(i_cct, i_tot, i_dir).	MotorForce(m_dir = i_dir)
+																r_Speed_MF(i_cct, i_tot, i_dir).	MotorForce(m_dir = i_dir)
 	);
 	
 proc ApplyMotorForce(m_vcs:sVirtualCarState, m_dnrp:sDNRPState, m_dir:sDirection, m_gas:sPedalState, m_brake:sPedalState, m_battery:sBatteryState, m_ccstate:sCCState) = 
@@ -177,19 +226,31 @@ init
   	aSpeed,
   	aCC,
   	% Output actions
-  	aVCS,
+  	% aVCS,
   	aMotorForce,
-		aCCActive,
+		% aCCActive,
 		% Communications
 		c_VCS,
 		c_ccEnable,
-		c_Battery
+		c_Battery,
+		c_GasPedal,
+		c_BrakePedal,
+		c_DNRP,
+		c_Car,
+		c_Speed,
+		c_CC
 		},
 		comm(
-		{ 
+		{
 			s_VCS | r_VCS_steer | r_VCS_light | r_VCS_MF -> c_VCS,
 			s_ccEnable | r_ccEnable_MF -> c_ccEnable,
-			s_Battery | r_Battery_MF -> c_Battery
+			s_GasPedal | r_GasPedal_MF -> c_GasPedal,
+  		s_BrakePedal | r_BrakePedal_MF	-> c_BrakePedal,
+  		s_DNRP | r_DNRP_MF -> c_DNRP,
+  		s_Car | r_Car_Safety	-> c_Car,
+  		s_Battery	| r_Battery_Safety	| r_Battery_MF	-> c_Battery,
+  		s_Speed | r_Speed_MF	-> c_Speed,
+  		s_CC | r_CC_Steering	-> c_CC
 		},
 		 MotorForce(Off, NP, Static, Released, Released, Full, Disabled) ||
 		 Safety(Off, Off, Safe) || Steering(steeringOff)
