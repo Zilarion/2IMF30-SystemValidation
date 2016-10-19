@@ -1,0 +1,106 @@
+% --------------------
+% Sort declarations
+% --------------------
+sort 
+	sPedalState = struct Pressed | Released;
+	sDNRPState = struct D | R | NP;
+	sOnOffButton = struct SwitchOn | SwitchOff;
+	sBatteryState = struct Unsafe | Safe | Full;
+	sCCThreshold = struct BelowCCmin | AboveCCmin;
+	sTurnOffThreshold = struct BelowTurnOffMax | AboveTurnOffMax;
+	sDirection = struct Forwards | Backwards | Static;
+	sCCState = struct Enabled | Disabled;
+	sCCButton = struct Enable | Disable;
+	sVirtualCarState = struct On | Off;
+	sBrakeLighting = struct LightOn | LightOff;
+
+% --------------------
+% Action declarations
+% --------------------
+act
+	% Input actions from the user and environment
+  	aGasPedal : sPedalState;
+  	aBrakePedal : sPedalState;
+  	aDNRP : sDNRPState;
+  	aCar : sOnOffButton;
+  	aBattery : sBatteryState;
+  	aSpeed : sCCThreshold # sTurnOffThreshold # sDirection;
+  	aCC : sCCButton;
+  	aMotorForce : sDirection;
+
+  	% Output actions
+  	aVCS : sVirtualCarState;
+  	aMotorforce : sDirection;
+	aBrakeLighting: sBrakeLighting;
+	aCCActive: sCCState;
+
+% --------------------
+% Communication definitions
+% --------------------
+act s_VCS, r_VCS_steer, r_VCS_drive, r_VCS_light, c_VCS : safetyState;
+act s_ccEnable, r_ccEnable, c_ccEnable: sCCState;
+% --------------------
+% Safety Procedure
+% --------------------
+sort safetyState = struct safetyOn | safetyOff | safetyNull;
+
+proc Safety(state:safetyState) = 
+	
+	% REQ 1 TEST CASES
+		% short sequence
+		% should be TRUE
+		% aCar(SwitchOn).s_VCS(safetyOn).aVCS(On).aCar(SwitchOff).aVCS(Off).Safety(safetyOn);
+
+		% random sequence without SwitchOff before VCS(ON)
+		% should be TRUE
+		% aCar(SwitchOn).s_VCS(safetyOn).aBattery(Safe).aBattery(Unsafe).aBattery(Safe).aVCS(On).aCar(SwitchOff).aVCS(Off).Safety(safetyOn);
+
+		% random sequence with SwitchOff before VCS(ON)
+		% should be FALSE
+		% aCar(SwitchOn).s_VCS(safetyOn).aBattery(Safe).aBattery(Unsafe).aBattery(Safe).aCar(SwitchOff).aBattery(Unsafe).aBattery(Safe).aCar(SwitchOff).aVCS(On).aCar(SwitchOff).aVCS(Off).Safety(safetyOn);
+
+		% random sequence with VCS(OFF) before VCS(ON)
+		% should be FALSE
+		% aCar(SwitchOn).s_VCS(safetyOn).aBattery(Safe).aBattery(Unsafe).aBattery(Safe).aCar(SwitchOff).aBattery(Unsafe).aBattery(Safe).aVCS(Off).aVCS(On).aCar(SwitchOff).aVCS(Off).Safety(safetyOn);
+
+	% REQ 6 TEST CASES
+		% short sequence
+		% should be TRUE
+		% aDNRP(D).aBattery(Safe).s_VCS(safetyOn).aGasPedal(Pressed).aMotorForce(Forwards).aDNRP(NP).Safety(safetyOn);
+
+		% short sequence
+		% should be FALSE
+		% aBattery(Safe).aDNRP(R).aGasPedal(Pressed).aMotorForce(Forwards).Safety(safetyOn);
+
+		% random sequence without aDNRP(R || NP)
+		% should be TRUE
+		% aDNRP(D).aBattery(Safe).s_VCS(safetyOn).aGasPedal(Pressed).aBattery(Unsafe).aBattery(Safe).aMotorForce(Forwards).aDNRP(NP).Safety(safetyOn);
+
+		% random sequence with aDNRP(R) before aGasPedal(Pressed)
+		% should be FALSE
+		% aDNRP(D).aBattery(Safe).aBattery(Unsafe).aDNRP(R).s_VCS(safetyOn).aGasPedal(Pressed).aBattery(Safe).aBattery(Unsafe).aMotorForce(Forwards).aDNRP(NP).Safety(safetyOn);
+
+		% random sequence with aDNRP(NP) between aGasPedal(Pressed) and aMotorForce(Forwards)
+		% should be FALSE
+		% aDNRP(D).aBattery(Safe).aBattery(Unsafe).s_VCS(safetyOn).aGasPedal(Pressed).aBattery(Safe).aDNRP(NP).aBattery(Unsafe).aMotorForce(Forwards).aDNRP(NP).Safety(safetyOn);
+
+
+
+proc Test(state:safetyState) = 
+	% REQ 1 TEST
+		 sum test:safetyState.r_VCS_steer(test).aBrakeLighting(LightOff).Test(test);
+
+% --------------------
+% Process definition
+% --------------------
+init
+	allow({ 
+		aCar, aBrakeLighting, aBattery, aCC, aVCS, aMotorForce, aDNRP, aGasPedal,
+		c_VCS, c_ccEnable
+	},
+	comm({ 
+		s_VCS | r_VCS_steer -> c_VCS,
+		s_ccEnable | r_ccEnable -> c_ccEnable
+	},
+	Safety(safetyOff) || Test(safetyOff)
+	));
