@@ -192,5 +192,5 @@ init
 			s_Battery | r_Battery_MF -> c_Battery
 		},
 		 MotorForce(Off, NP, Static, Released, Released, Full, Disabled) ||
-		 Safety(Off, Off, Safe) || LSteering(steeringOff)
+		 Safety(Off, Off, Safe) || Steering(steeringOff)
 		));
