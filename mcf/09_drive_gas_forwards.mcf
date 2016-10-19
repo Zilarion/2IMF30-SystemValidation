@@ -1,5 +1,5 @@
-% Requirement 6
-% After a DNRP(D) action occured after which a GasPedal(Pressed) occured there should be a path in which MotorForce(Forwards) occurs in a finite amount of steps.
+% Requirement 9
+% After a DNRP(D) action occured after which a GasPedal(Pressed) occured there should be a path in which one of MotorForce(Forwards), DNRP(R), DNRP(NP), BrakePedal(Pressed) or Battery(Unsafe) occurs in a finite amount of steps.
 
 nu X (ds:Bool = false, bp:Bool = false, bs:Bool = false).(
 	% DNRP changes
