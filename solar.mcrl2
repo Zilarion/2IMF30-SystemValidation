@@ -74,7 +74,7 @@ act
   	r_CC_Steering : sCCButton;
 
 		% Inter process communications
-		act s_VCS, r_VCS_steer, r_VCS_light, r_VCS_MF, c_VCS : sVirtualCarState;
+		act s_VCS, r_VCS_steer, r_VCS_MF, c_VCS : sVirtualCarState;
 		act s_ccEnable, r_ccEnable_MF, c_ccEnable: sCCState;
 
 
@@ -117,9 +117,9 @@ proc Safety(state:sVirtualCarState, target:sVirtualCarState, battery:sBatterySta
 		Safety()
 		)
 		
-		+ r_Battery_Safety(Unsafe).Safety(target=Off, battery=Unsafe)
-		+ r_Battery_Safety(Safe).Safety(battery=Safe)
-		+ r_Battery_Safety(Full).Safety(battery=Full)
+	+ r_Battery_Safety(Unsafe).Safety(target=Off, battery=Unsafe)
+	+ r_Battery_Safety(Safe).Safety(battery=Safe)
+	+ r_Battery_Safety(Full).Safety(battery=Full)
 ;
 
 % --------------------
@@ -143,9 +143,9 @@ proc Steering(state:steeringState) =
 	
 	%TODO add remaining checks on when to enable CC
 	% Interactions only possible when active
-	+ (state==steeringOn) -> (
-		% Cruise control interactions
-		sum btn:sCCButton.r_CC_Steering(btn).
+	+
+	sum btn:sCCButton.r_CC_Steering(btn). 
+	(state==steeringOn) -> (		
 			% Do request to turn CC on
 			(btn==Enable) ->
 				s_ccEnable(Enabled).Steering()
@@ -153,7 +153,9 @@ proc Steering(state:steeringState) =
 			% Do request to turn CC off			
 			(btn==Disable) ->
 				s_ccEnable(Disabled).Steering()
-	);
+	) <>
+	Steering()
+	;
 
 % --------------------
 % Drive procedure
@@ -242,7 +244,7 @@ init
 		},
 		comm(
 		{
-			s_VCS | r_VCS_steer | r_VCS_light | r_VCS_MF -> c_VCS,
+			s_VCS | r_VCS_steer | r_VCS_MF -> c_VCS,
 			s_ccEnable | r_ccEnable_MF -> c_ccEnable,
 			s_GasPedal | r_GasPedal_MF -> c_GasPedal,
   		s_BrakePedal | r_BrakePedal_MF	-> c_BrakePedal,
@@ -253,5 +255,5 @@ init
   		s_CC | r_CC_Steering	-> c_CC
 		},
 		 MotorForce(Off, NP, Static, Released, Released, Full, Disabled) ||
-		 Safety(Off, Off, Safe) || Steering(steeringOff)
+		 Safety(Off, Off, Safe) || Steering(steeringOff) || InputHandler
 		));
