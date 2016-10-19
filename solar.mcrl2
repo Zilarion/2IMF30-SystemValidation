@@ -49,37 +49,31 @@ act s_Battery, r_Battery_MF, c_Battery: sBatteryState;
 % --------------------
 % Safety Procedure
 % --------------------
-sort safetyState = struct safetyOn | safetyOff | safetyNull;
 
-proc Safety(state:safetyState, target:safetyState) =
+proc Safety(state:sVirtualCarState, target:sVirtualCarState, battery:sBatteryState) =
+	
 	% State changes
-	(target != safetyNull) ->
-		((target==safetyOn) ->
-			s_VCS(On).aVCS(On)
-		<>
-		(target==safetyOff) ->
-			s_VCS(Off).aVCS(Off)
-		).Safety(state=target, target=safetyNull)
+	s_VCS(target).aVCS(target).Safety(state=target)
 	
 	% Car on/off button interactions
 	+ (sum btn:sOnOffButton.aCar(btn).
-		% The car is turned on
-		(btn == SwitchOn && state==safetyOff) ->
-			Safety(target=safetyOn)
+		% Turn the car on
+		(btn == SwitchOn && state==Off && battery!=Unsafe) ->
+			Safety(target=On)
 		<> 
-		% The car is turned off
-		(btn == SwitchOff && state==safetyOn) ->
-			Safety(target=safetyOff)
+		% Turn the car off
+		% TODO Add speed check here
+		(btn == SwitchOff && state==On) ->
+			Safety(target=Off)
 		<> 
 		% We don't have to change anything
 		Safety()
 		)
-	
-	% Interactions only possible when uC is on
-	+ (state==safetyOn) ->
-		% Battery is unsafe, turn off!
-		aBattery(Unsafe).Safety(target=safetyOff);
-
+		
+		+ aBattery(Unsafe).Safety(target=Off, battery=Unsafe)
+		+ aBattery(Safe).Safety(battery=Safe)
+		+ aBattery(Full).Safety(battery=Full)
+		+ s_Battery(battery).Safety();
 
 % --------------------
 % Steering procedure
@@ -100,6 +94,7 @@ proc Steering(state:steeringState) =
 			Steering(steeringOff)	
 	)
 	
+	%TODO add remaining checks on when to enable CC
 	% Interactions only possible when active
 	+ (state==steeringOn) -> (
 		% Cruise control interactions
@@ -213,5 +208,5 @@ init
 			s_Battery | r_Battery_MF -> c_Battery
 		},
 		 MotorForce(Off, NP, Static, Released, Released, Full, Disabled) ||
-		 Safety(safetyOff, safetyNull) || Lighting(Off) || Steering(steeringOff)
+		 Safety(Off, Off, Safe) || Lighting(Off) || Steering(steeringOff)
 		));
