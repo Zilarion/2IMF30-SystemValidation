@@ -134,27 +134,16 @@ proc Safety(state:sVirtualCarState, battery:sBatteryState) =
 % --------------------
 % Steering procedure
 % --------------------
-sort steeringState = struct steeringOn | steeringOff | steeringNull;
 
-proc Steering(state:steeringState) =
-	% Process state changes
-	%(target != steeringNull) ->
-	%	Steering(target, steeringNull)
-	
+proc Steering(state:sVirtualCarState) =
 	% Process messages
-	sum data:sVirtualCarState.r_VCS_steer(data).(
-		(data==On) ->
-			Steering(steeringOn)
-		<>	
-		%(data==Off) ->
-			Steering(steeringOff)	
-	)
+	sum data:sVirtualCarState.r_VCS_steer(data).Steering(data)
 	
 	%TODO add remaining checks on when to enable CC
 	% Interactions only possible when active
 	+
 	sum btn:sCCButton.r_CC_Steering(btn). 
-	(state==steeringOn) -> (		
+	(state==On) -> (		
 			% Do request to turn CC on
 			(btn==Enable) ->
 				s_ccEnable(Enabled).Steering()
@@ -264,6 +253,6 @@ init
   		s_CC | r_CC_Steering	-> c_CC
 		},
 		 MotorForce(Off, NP, Static, Released, Released, Full, Disabled) ||
-		 Safety(Off, Safe) || Steering(steeringOff) 
+		 Safety(Off, Safe) || Steering(Off) 
 		 || InputHandler
 		));
