@@ -14,16 +14,12 @@ sort
 	sVirtualCarState = struct On | Off;
 	sBrakeLighting = struct LightOn | LightOff;
 
+	
 map opposite: sDirection -> sDirection;
-eqn opposite(Forwards)  = Backwards;
-    opposite(Static)    = Static;
-    opposite(Backwards) = Forwards;
-
-% Maps the DNRP state to a direction
-map direction: sDNRPState -> sDirection;
-eqn direction(D)  = Forwards;
-    direction(NP) = Static;
-    direction(R)  = Backwards;
+eqn
+	opposite(Forwards) = Backwards;
+	opposite(Static) = Static;
+	opposite(Backwards) = Forwards;
 
 % --------------------
 % Action declarations
@@ -36,77 +32,73 @@ act
   	aCar : sOnOffButton;
   	aBattery : sBatteryState;
   	aSpeed : sCCThreshold # sTurnOffThreshold # sDirection;
-
-	aDirection: sDirection;
-	aCCSpeed: sCCThreshold;
-	aTurnOffSpeed: sTurnOffThreshold;
-
   	aCC : sCCButton;
 
   	% Output actions
   	aVCS : sVirtualCarState;
   	aMotorForce : sDirection;
-	aBrakeLighting: sBrakeLighting;
-	aCCActive: sCCState;
+		aBrakeLighting: sBrakeLighting;
+		aCCActive: sCCState;
 
 % --------------------
 % Communication definitions
 % --------------------
-act s_VCS, r_VCS_steer, r_VCS_drive, r_VCS_light, c_VCS : sVirtualCarState;
-act s_ccEnable, r_ccEnable, c_ccEnable: sCCState;
-act s_battery, r_battery, c_battery : sBatteryState;
+act s_VCS, r_VCS_steer, r_VCS_light, r_VCS_MF, c_VCS : sVirtualCarState;
+act s_ccEnable, r_ccEnable_MF, c_ccEnable: sCCState;
+act s_Battery, r_Battery_MF, c_Battery: sBatteryState;
 % --------------------
 % Safety Procedure
 % --------------------
 sort safetyState = struct safetyOn | safetyOff | safetyNull;
 
 proc Safety(state:safetyState, target:safetyState) =
-	% Send state changes
+	% State changes
 	(target != safetyNull) ->
 		((target==safetyOn) ->
-			s_VCS(On)
+			s_VCS(On).aVCS(On)
 		<>
 		(target==safetyOff) ->
-			s_VCS(Off)
-		).Safety(target, safetyNull)
-
+			s_VCS(Off).aVCS(Off)
+		).Safety(state=target, target=safetyNull)
+	
 	% Car on/off button interactions
-	+ sum btn:sOnOffButton.aCar(btn).
+	+ (sum btn:sOnOffButton.aCar(btn).
 		% The car is turned on
 		(btn == SwitchOn && state==safetyOff) ->
-			aVCS(On).Safety(target=safetyOn)
+			Safety(target=safetyOn)
 		<> 
 		% The car is turned off
 		(btn == SwitchOff && state==safetyOn) ->
-			aVCS(Off).Safety(target=safetyOff)
+			Safety(target=safetyOff)
 		<> 
 		% We don't have to change anything
 		Safety()
+		)
 	
 	% Interactions only possible when uC is on
 	+ (state==safetyOn) ->
 		% Battery is unsafe, turn off!
-		aBattery(Unsafe).aVCS(Off).Safety(target=safetyOff);
+		aBattery(Unsafe).Safety(target=safetyOff);
 
 
 % --------------------
 % Steering procedure
 % --------------------
 sort steeringState = struct steeringOn | steeringOff | steeringNull;
-%act steeringChange:steeringState;
 
 proc Steering(state:steeringState) =
 	% Process state changes
 	%(target != steeringNull) ->
-	%	steeringChange(target).Steering(target, steeringNull)
+	%	Steering(target, steeringNull)
 	
 	% Process messages
-	sum data:sVirtualCarState.r_VCS_steer(data).
+	sum data:sVirtualCarState.r_VCS_steer(data).(
 		(data==On) ->
 			Steering(steeringOn)
 		<>	
-		(data==Off) ->
+		%(data==Off) ->
 			Steering(steeringOff)	
+	)
 	
 	% Interactions only possible when active
 	+ (state==steeringOn) -> (
@@ -114,11 +106,11 @@ proc Steering(state:steeringState) =
 		sum btn:sCCButton.aCC(btn).
 			% Do request to turn CC on
 			(btn==Enable) ->
-				s_ccEnable(Enabled)
+				s_ccEnable(Enabled).Steering()
 			<>
 			% Do request to turn CC off			
 			(btn==Disable) ->
-				s_ccEnable(Disabled)
+				s_ccEnable(Disabled).Steering()
 	);
 
 % --------------------
@@ -136,102 +128,90 @@ proc Lighting(state:sVirtualCarState) =
 
 % --------------------
 % Drive procedure
+% i_name -> input variable
+% m_name -> state variable
 % --------------------
-sort driveState = struct driveCC | driveOn | driveOff;
-sort speedState = struct static | forwards | backwards | forwardsAboveCC | forwardsAboveOff | forwardsAboveCCAndOff;
-%act driveChange:driveState;
-
-proc Drive(state: driveState, speed:speedState, dir:sDirection, dnrp:sDNRPState, cc:sCCState, gp:sPedalState, bp:sPedalState, battery:sBatteryState) = 	
-	% Process VCS updates
-	sum data:sVirtualCarState.r_VCS_drive(data).
-		(data==On) ->
-			Drive(state=driveOn)
-		<>
-		(data==Off) ->
-			Drive(state=driveOff)
+proc MotorForce(m_vcs:sVirtualCarState, m_dnrp:sDNRPState, m_dir:sDirection, m_gas:sPedalState, m_brake:sPedalState, m_battery:sBatteryState, m_ccstate:sCCState) = 
+	ApplyMotorForce(m_vcs, m_dnrp, m_dir, m_gas, m_brake, m_battery, m_ccstate).(
+		sum i_vcs:sVirtualCarState.	r_VCS_MF(i_vcs).							MotorForce(m_vcs = i_vcs) + 
+		sum i_ccstate:sCCState.			r_ccEnable_MF(i_ccstate).			MotorForce(m_ccstate = i_ccstate) + 
+		sum i_dnrp:sDNRPState.			aDNRP(i_dnrp).								MotorForce(m_dnrp = i_dnrp) + 
+		sum i_gas:sPedalState.			aGasPedal(i_gas).							MotorForce(m_gas = i_gas) + 
+		sum i_brake:sPedalState.		aBrakePedal(i_brake).					MotorForce(m_brake = i_brake) + 
+		sum i_battery:sBatteryState.r_Battery_MF(i_battery).			MotorForce(m_battery = i_battery) + 
+		sum i_dir:sDirection.sum i_tot:sTurnOffThreshold.sum i_cct:sCCThreshold.
+																aSpeed(i_cct, i_tot, i_dir).	MotorForce(m_dir = i_dir)
+	);
 	
-	% Process battery status messages
-	+ sum data:sBatteryState.r_battery(data).(
-		Drive(battery=data)
-	) % End battery status messages
-
-	% Handle state changes when on
-	+ (state==driveOn) -> (
-		% Process CC messages
-		sum data:sCCState.r_ccEnable(data).(
-			Drive(cc=data)
-		) % End CC messages
-		
-		% Process CC speed updates
-		+ sum data:sCCThreshold.aCCSpeed(data).(
-			% CC drops below cc min
-			(data==BelowCCmin) -> (
-				(speed==forwardsAboveCC) ->
-					Drive(speed=forwards)
-				<>
-				(speed==forwardsAboveCCAndOff) ->
-					Drive(speed=forwardsAboveOff)
-			)
-			<> 
-			% CC goes above cc min
-			(data==AboveCCmin) -> (
-				(speed==forwards) ->
-					Drive(speed=forwardsAboveCC)
-				<>
-				(speed==forwardsAboveOff) ->
-					Drive(speed=forwardsAboveCCAndOff)
-			)
+proc ApplyMotorForce(m_vcs:sVirtualCarState, m_dnrp:sDNRPState, m_dir:sDirection, m_gas:sPedalState, m_brake:sPedalState, m_battery:sBatteryState, m_ccstate:sCCState) = 
+	% Never drive when the car is Off, or when the battery is too emtpy (Unsafe)
+	(m_vcs == Off || m_battery == Unsafe) -> 
+		aMotorForce(Static)
+	<> (m_ccstate == Enabled) ->
+		% TODO Should we also check DNRP states when applying CC?
+		% Note that CC module should also so this.
+		% Second note: should we check on battery safety level?
+		aMotorForce(Forwards)
+	<> (m_dnrp == NP ) -> %from here on: m_vcs == On
+		aMotorForce(Static)
+	<> (m_dnrp == D) ->
+		(m_brake == Pressed) -> %ignore gas
+			(m_battery == Full) ->
+				aMotorForce(Static)
 			<>
-			Drive()
-		) % End cc speed updates
-
-		% Process DNRP changes
-		+ sum data:sDNRPState.aDNRP(data).(
-			Drive(dnrp=data)
-		) % End DNRP changes
-		
-		% process gas pedal changes
-		+ sum data:sPedalState.aGasPedal(data).(
-			(bp==Released && battery==Safe) -> ( % If the brake pedal is not pressed and it's safe
-				aMotorForce(direction(dnrp)).Drive(dir=direction(dnrp), gp=data)
-			) <> (% No actions, but update gp state
-			Drive(gp=data)
-			)
-		) % End gas pedal changes
-
-		% process brake pedal changes
-		+ sum data:sPedalState.aBrakePedal(data).(
-			(data==Pressed) -> % Brake pressed
-				(battery==Full) -> aMotorForce(Static).Drive(dir=Static, bp=data) % battery is full, don't brake
-				<> aMotorForce(opposite(dir)).Drive(dir=opposite(dir), bp=data)   % Brake
-			<> % Brake released
-			(gp==Pressed) -> % Gas is pressed
-				aMotorForce(direction(dnrp)).Drive(dir=direction(dnrp), bp=data)
-			<> % No actions, but update bp state
-			Drive(bp=data)
-		) % End brake pedal changes
-	) % End state changes when on
-;
+				aMotorForce(opposite(m_dir))
+		<> (m_gas == Pressed) -> % only gas is pressed
+			(m_battery == Full && m_dir == Backwards) ->
+				aMotorForce(Static)
+			<>
+				aMotorForce(Forwards)
+		<> %Neither gas not brake is pressed
+			aMotorForce(Static)
+	<> %(m_dnrp == R)
+		(m_brake == Pressed) -> %ignore gas
+			(m_battery == Full) ->
+				aMotorForce(Static)
+			<>
+				aMotorForce(opposite(m_dir))
+		<> (m_gas == Pressed) -> % only gas is pressed
+			(m_battery == Full && m_dir == Forwards) ->
+				aMotorForce(Static)
+			<>
+				aMotorForce(Backwards)
+		<> %Neither gas not brake is pressed
+			aMotorForce(Static)
+; %End of ApplyMotorForce
 
 % --------------------
 % Process definition
 % --------------------
-init % TODO hide all but (comm and) output actions?
-	allow({ 
-		% Input actions
-		aGasPedal, aBrakePedal, aDNRP, aCar, aBattery, aDirection, aCCSpeed, aTurnOffSpeed, aCC, 
-		% Output actions
-		aVCS, aMotorForce, aBrakeLighting, aCCActive,
-		% Communication actions
-		c_VCS, c_ccEnable, c_battery
-	},
-	comm({ 
-		s_battery | r_battery -> c_battery,
-		s_VCS | r_VCS_steer | r_VCS_drive | r_VCS_light -> c_VCS,
-		s_ccEnable | r_ccEnable -> c_ccEnable
-	},
-		Safety(safetyOff, safetyNull) || 
-		Lighting(Off) || 
-		Drive(driveOff, static, Static, NP, Disabled, Released, Released, Safe) || 
-		Steering(steeringOff)
-	));
+
+init
+	allow({
+		%Input actions 
+  	aGasPedal,
+  	aBrakePedal,
+  	aDNRP,
+  	aCar,
+  	aBattery,
+  	aSpeed,
+  	aCC,
+  	% Output actions
+  	aVCS,
+  	aMotorForce,
+		aBrakeLighting,
+		aCCActive,
+		% Communications
+		c_VCS,
+		c_ccEnable,
+		c_Battery
+		},
+		comm(
+		{ 
+			s_VCS | r_VCS_steer | r_VCS_light | r_VCS_MF -> c_VCS,
+			s_ccEnable | r_ccEnable_MF -> c_ccEnable,
+			s_Battery | r_Battery_MF -> c_Battery
+		},
+		 MotorForce(Off, NP, Static, Released, Released, Full, Disabled) ||
+		 Safety(safetyOff, safetyNull) || Lighting(Off) || Steering(steeringOff)
+		));
