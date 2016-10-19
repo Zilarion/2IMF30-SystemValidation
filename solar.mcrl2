@@ -97,27 +97,27 @@ sum ccthr:sCCThreshold.sum onoffthr:sTurnOffThreshold.sum dir:sDirection.aSpeed(
 % Safety Procedure
 % --------------------
 
-proc Safety(state:sVirtualCarState, target:sVirtualCarState, battery:sBatteryState) =
+proc Safety(state:sVirtualCarState, battery:sBatteryState) =
 	
 	% State changes
-	s_VCS(target).Safety(state=target)
+	% s_VCS(state).Safety() +
 	
 	% Car on/off button interactions
-	+ (sum btn:sOnOffButton.r_Car_Safety(btn).
+	(sum btn:sOnOffButton.r_Car_Safety(btn).
 		% Turn the car on
-		(btn == SwitchOn && state==Off && battery!=Unsafe) ->
-			Safety(target=On)
+		(btn == SwitchOn && battery!=Unsafe) ->
+			s_VCS(On).Safety(state=On)
 		<> 
 		% Turn the car off
 		% TODO Add speed check here
-		(btn == SwitchOff && state==On) ->
-			Safety(target=Off)
+		(btn == SwitchOff) ->
+			s_VCS(Off).Safety(state=Off)
 		<> 
 		% We don't have to change anything
 		Safety()
 		)
 		
-	+ r_Battery_Safety(Unsafe).Safety(target=Off, battery=Unsafe)
+	+ r_Battery_Safety(Unsafe).s_VCS(Off).Safety(state=Off, battery=Unsafe)
 	+ r_Battery_Safety(Safe).Safety(battery=Safe)
 	+ r_Battery_Safety(Full).Safety(battery=Full)
 ;
@@ -255,5 +255,5 @@ init
   		s_CC | r_CC_Steering	-> c_CC
 		},
 		 MotorForce(Off, NP, Static, Released, Released, Full, Disabled) ||
-		 Safety(Off, Off, Safe) || Steering(steeringOff) || InputHandler
+		 Safety(Off, Safe) || Steering(steeringOff) || InputHandler
 		));
