@@ -76,13 +76,21 @@ proc Safety(state:safetyState) =
 		% should be TRUE
 		% aDNRP(D).aBattery(Safe).aBattery(Unsafe).s_VCS(safetyOn).aGasPedal(Pressed).aBattery(Safe).aBattery(Unsafe).aMotorForce(Forwards).aDNRP(NP).Safety(safetyOn);
 
+		% random sequence where you shift from D to R back to D followe by GasPedal
+		% should be TRUE
+		% aDNRP(D).aDNRP(R).aDNRP(D).aBattery(Safe).aBattery(Unsafe).s_VCS(safetyOn).aGasPedal(Pressed).aBattery(Safe).aBattery(Unsafe).aMotorForce(Forwards).aDNRP(NP).Safety(safetyOn);
+
+		% random sequence where you shift from D to R back to D after GasPedal and before MotorForce
+		% should be FALSE? Undesired behaviour if it were true?
+		 aDNRP(D).aBattery(Safe).aBattery(Unsafe).s_VCS(safetyOn).aGasPedal(Pressed).aDNRP(R).aDNRP(D).aBattery(Safe).aBattery(Unsafe).aMotorForce(Forwards).aDNRP(NP).Safety(safetyOn);
+
 		% random sequence with aDNRP(R) before aGasPedal(Pressed)
 		% should be FALSE
 		% aDNRP(D).aBattery(Safe).aBattery(Unsafe).aDNRP(R).s_VCS(safetyOn).aGasPedal(Pressed).aBattery(Safe).aBattery(Unsafe).aMotorForce(Forwards).aDNRP(NP).Safety(safetyOn);
 
 		% random sequence with aDNRP(NP) between aGasPedal(Pressed) and aMotorForce(Forwards)
 		% should be FALSE
-		 aDNRP(D).aBattery(Safe).aBattery(Unsafe).s_VCS(safetyOn).aGasPedal(Pressed).aBattery(Safe).aDNRP(NP).aBattery(Unsafe).aMotorForce(Forwards).aDNRP(NP).Safety(safetyOn);
+		% aDNRP(D).aBattery(Safe).aBattery(Unsafe).s_VCS(safetyOn).aGasPedal(Pressed).aBattery(Safe).aDNRP(NP).aBattery(Unsafe).aMotorForce(Forwards).aDNRP(NP).Safety(safetyOn);
 
 
 
