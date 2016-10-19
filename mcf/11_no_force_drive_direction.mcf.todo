@@ -1,4 +1,0 @@
-% Requirement 11
-% When the aCCSpeed(BelowCCmin) action occured, the aCCActive(Enabled) action should never occur until the aCCSpeed(AboveCCmin) action occured.
-
-[true* . aCCSpeed(BelowCCmin)]mu X.(([aCCSpeed(AboveCCmin)] X && <true>true && <aCCActive(Enabled)>false))

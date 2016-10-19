@@ -1,0 +1,8 @@
+% Requirement 12
+% Under no circumstance may it happen that in between a Battery(Unsafe) and Battery(!Unsafe) action a VCS(On) action occurs
+
+[true* . c_Battery(Unsafe)] mu X (d:Bool = false) . (
+		[c_Battery(Unsafe)] X(false) &&
+		[c_Battery(Safe) || c_Battery(Full)] X(true) &&
+		[!c_VCS(On)] X(d) && <true>true && val(d)
+)
