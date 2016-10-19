@@ -68,6 +68,10 @@ proc Safety(state:safetyState) =
 		% should be TRUE
 		% aDNRP(D).s_VCS(safetyOn).aGasPedal(Pressed).aMotorForce(Forwards).aDNRP(NP).Safety(safetyOn);
 
+		% short sequence
+		% should be FALSE
+		% aDNRP(R).aGasPedal(Pressed).aMotorForce(Forwards).Safety(safetyOn);
+
 		% random sequence without aDNRP(R || NP)
 		% should be TRUE
 		% aDNRP(D).aBattery(Safe).aBattery(Unsafe).s_VCS(safetyOn).aGasPedal(Pressed).aBattery(Safe).aBattery(Unsafe).aMotorForce(Forwards).aDNRP(NP).Safety(safetyOn);
@@ -78,7 +82,7 @@ proc Safety(state:safetyState) =
 
 		% random sequence with aDNRP(NP) between aGasPedal(Pressed) and aMotorForce(Forwards)
 		% should be FALSE
-		% aDNRP(D).aBattery(Safe).aBattery(Unsafe).s_VCS(safetyOn).aGasPedal(Pressed).aBattery(Safe).aDNRP(NP).aBattery(Unsafe).aMotorForce(Forwards).aDNRP(NP).Safety(safetyOn);
+		 aDNRP(D).aBattery(Safe).aBattery(Unsafe).s_VCS(safetyOn).aGasPedal(Pressed).aBattery(Safe).aDNRP(NP).aBattery(Unsafe).aMotorForce(Forwards).aDNRP(NP).Safety(safetyOn);
 
 
 

@@ -16,6 +16,17 @@
 
 % REQ 6, complies to testing scenarios
 % [true*.aDNRP(D)]<(!( aDNRP(R) || aDNRP(NP) ))*.aGasPedal(Pressed).(!( aDNRP(R) || aDNRP(NP) ))*.aMotorForce(Forwards)>true
+%nu X (ds:Bool = false).(
+%	[aDNRP(D)] X(true) &&
+%	[aDNRP(R) || aDNRP(NP)] X(false) &&
+%	[!(exists x:sDNRPState.aDNRP(x))]X(ds) &&
+%	[aGasPedal(Pressed)] mu Y.([!aMotorForce(Forwards)]Y && <true>true && val(ds)))
+
+nu X (ds:Bool = false).(
+	[aDNRP(D)] X(true) &&
+	[aDNRP(R) || aDNRP(NP)] X(false) &&
+	[!(exists x:sDNRPState.aDNRP(x))]X(ds) &&
+	[aGasPedal(Pressed)] mu Y.([!aMotorForce(Forwards)]Y && <true>true && val(ds)))	
 
 % REQ 7, not tested but similar to REQ 6
 % [true*.aDNRP(R)]<(!( aDNRP(D) || aDNRP(NP) ))*.aGasPedal(Pressed).(!( aDNRP(D) || aDNRP(NP) ))*.aMotorForce(Backwards)>true
