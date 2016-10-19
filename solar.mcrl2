@@ -84,13 +84,22 @@ act
 
 proc InputHandler = 
 (
-sum gas:sPedalState.aGasPedal(gas).s_GasPedal(gas) +
-sum brake:sPedalState.aBrakePedal(brake).s_BrakePedal(brake) +
-sum dnrp:sDNRPState.aDNRP(dnrp).s_DNRP(dnrp) +
-sum car:sOnOffButton.aCar(car).s_Car(car) +
-sum batt:sBatteryState.aBattery(batt).s_Battery(batt) +
-sum cc:sCCButton.aCC(cc).s_CC(cc) +
-sum ccthr:sCCThreshold.sum onoffthr:sTurnOffThreshold.sum dir:sDirection.aSpeed(ccthr, onoffthr, dir).s_Speed(ccthr, onoffthr, dir)
+%sum gas:sPedalState.aGasPedal(gas).s_GasPedal(gas) +
+%sum brake:sPedalState.aBrakePedal(brake).s_BrakePedal(brake) +
+%sum dnrp:sDNRPState.aDNRP(dnrp).s_DNRP(dnrp) +
+%sum car:sOnOffButton.aCar(car).s_Car(car) +
+%sum batt:sBatteryState.aBattery(batt).s_Battery(batt) +
+%sum cc:sCCButton.aCC(cc).s_CC(cc) +
+%sum ccthr:sCCThreshold.sum onoffthr:sTurnOffThreshold.sum dir:sDirection.aSpeed(ccthr, onoffthr, dir).s_Speed(ccthr, onoffthr, dir)
+
+sum gas:sPedalState.s_GasPedal(gas) +
+sum brake:sPedalState.s_BrakePedal(brake) +
+sum dnrp:sDNRPState.s_DNRP(dnrp) +
+sum car:sOnOffButton.s_Car(car) +
+sum batt:sBatteryState.s_Battery(batt) +
+sum cc:sCCButton.s_CC(cc) +
+sum ccthr:sCCThreshold.sum onoffthr:sTurnOffThreshold.sum dir:sDirection.s_Speed(ccthr, onoffthr, dir)
+
 ).InputHandler;
 	
 % --------------------
@@ -220,13 +229,13 @@ proc ApplyMotorForce(m_vcs:sVirtualCarState, m_dnrp:sDNRPState, m_dir:sDirection
 init
 	allow({
 		%Input actions 
-  	aGasPedal,
-  	aBrakePedal,
-  	aDNRP,
-  	aCar,
-  	aBattery,
-  	aSpeed,
-  	aCC,
+  	%aGasPedal,
+  	%aBrakePedal,
+  	%aDNRP,
+  	%aCar,
+  	%aBattery,
+  	%aSpeed,
+  	%aCC,
   	% Output actions
   	% aVCS,
   	aMotorForce,
@@ -255,5 +264,6 @@ init
   		s_CC | r_CC_Steering	-> c_CC
 		},
 		 MotorForce(Off, NP, Static, Released, Released, Full, Disabled) ||
-		 Safety(Off, Safe) || Steering(steeringOff) || InputHandler
+		 Safety(Off, Safe) || Steering(steeringOff) 
+		 || InputHandler
 		));
