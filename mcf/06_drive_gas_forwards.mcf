@@ -1,0 +1,18 @@
+% Requirement 6
+% After a DNRP(D) action occured after which a GasPedal(Pressed) occured there should be a path in which MotorForce(Forwards) occurs in a finite amount of steps.
+
+nu X (ds:Bool = false, bp:Bool = false, bs:Bool = false) .
+	% DNRP changes
+	[aDNRP(D)] X(true, bp, bs) && 
+	[aDNRP(R) || aDNRP(NP)] X(false, bp, bs) &&
+
+	% Brake pedal changes
+	[aBrakePedal(Pressed)] X(ds, true, bs) &&
+	[aBrakePedal(Released)] X(ds, false, bs) &&
+
+	% Battery changes
+	[aBattery(Unsafe)] X(ds, bp, false) &&
+	[aBattery(Safe) || aBattery(Full)] X(ds, bp, true) &&
+
+	% Gas pedal is pressed
+	[aGasPedal(Pressed)] (!bp && ds && bs) => mu Y. ([aMotorForce(Forwards)] Y && <true>true)

@@ -1,4 +1,0 @@
-% Requirement 10
-% After a Battery(Unsafe) action a VirtualCarState(Off) should occur within a finite amount of steps
-
-[true* . aBattery(Unsafe)]mu X.(([aVCS(Off)] X && <true>true ))
