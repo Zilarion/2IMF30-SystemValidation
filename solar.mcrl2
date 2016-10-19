@@ -12,7 +12,6 @@ sort
 	sCCState = struct Enabled | Disabled;
 	sCCButton = struct Enable | Disable;
 	sVirtualCarState = struct On | Off;
-	sBrakeLighting = struct LightOn | LightOff;
 
 	
 map opposite: sDirection -> sDirection;
@@ -37,8 +36,7 @@ act
   	% Output actions
   	aVCS : sVirtualCarState;
   	aMotorForce : sDirection;
-		aBrakeLighting: sBrakeLighting;
-		aCCActive: sCCState;
+	aCCActive: sCCState;
 
 % --------------------
 % Communication definitions
@@ -114,19 +112,6 @@ proc Steering(state:steeringState) =
 	);
 
 % --------------------
-% Lighting procedure
-% --------------------
-proc Lighting(state:sVirtualCarState) = 
-	sum data:sVirtualCarState.r_VCS_light(data).
-		(data==Off) ->
-			aBrakeLighting(LightOff).Lighting(Off)
-		<>
-			Lighting()		
-
-	+ (state==On) -> % and brake is true
-		aBrakeLighting(LightOn).Lighting();
-
-% --------------------
 % Drive procedure
 % i_name -> input variable
 % m_name -> state variable
@@ -199,7 +184,6 @@ init
   	% Output actions
   	aVCS,
   	aMotorForce,
-		aBrakeLighting,
 		aCCActive,
 		% Communications
 		c_VCS,
