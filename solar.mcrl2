@@ -220,6 +220,16 @@ proc ApplyMotorForce(m_vcs:sVirtualCarState, m_dnrp:sDNRPState, m_dir:sDirection
 % --------------------
 
 init
+	hide({
+		c_Battery,
+		c_GasPedal,
+		c_BrakePedal,
+		c_DNRP,
+		c_Car,
+		c_Speed,
+		c_CC,
+		c_InputHandled
+	},
 	allow({
 		%Input actions 
   	aGasPedal,
@@ -261,4 +271,4 @@ init
 		 MotorForce(Off, NP, Static, Released, Released, Full, Disabled) ||
 		 Safety(Off, Safe) || Steering(Off) 
 		 || InputHandler
-		));
+		)));

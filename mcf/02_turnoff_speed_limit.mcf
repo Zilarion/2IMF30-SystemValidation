@@ -2,4 +2,4 @@
 % Between a Speed(*, AboveTurnOffMax, *) and a Speed(*, BelowTurnOffMax, *) no VCS(Off) should occur, unless a Battery(Unsafe) is seen.
 
 forall c:sCCThreshold . forall d:sDirection . exists cp:sCCThreshold . exists dp:sDirection .
-[true* . c_Speed(c, AboveTurnOffMax, d) . (!c_Speed(cp, BelowTurnOffMax, dp))* . c_VCS(Off)] false
+[true* . aSpeed(c, AboveTurnOffMax, d) . (!aSpeed(cp, BelowTurnOffMax, dp))* . c_VCS(Off)] false
