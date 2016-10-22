@@ -27,16 +27,16 @@ proc Test =
 	
 	% Req 01 tests
 		% should be FALSE
-		% c_Car(SwitchOn).c_Battery(Full).c_Battery(Unsafe)
+		% c_Speed(BelowCCmin, BelowTurnOffMax, Static).c_GasPedal(Pressed).c_VCS(On).c_Speed(BelowCCmin, AboveTurnOffMax, Static).c_VCS(Off).c_Speed(BelowCCmin, BelowTurnOffMax, Static)
 
 		% Should be FALSE
-		%c_Car(SwitchOn).c_Battery(Unsafe).c_VCS(Off).c_DNRP(D)
+		% c_Speed(BelowCCmin, BelowTurnOffMax, Static).c_GasPedal(Pressed).c_VCS(Off).c_VCS(On).c_Speed(BelowCCmin, AboveTurnOffMax, Backwards).c_VCS(Off).c_Speed(BelowCCmin, BelowTurnOffMax, Static)
 
 		% should be TRUE
-		%c_Car(SwitchOn).c_Battery(Full).c_Car(SwitchOff).c_Battery(Unsafe)
+		% c_Speed(BelowCCmin, BelowTurnOffMax, Static).c_GasPedal(Pressed).c_VCS(Off).c_VCS(On).c_Speed(BelowCCmin, AboveTurnOffMax, Backwards).c_Speed(BelowCCmin, BelowTurnOffMax, Static).c_VCS(Off)
  
 		% should be TRUE
-		c_Car(SwitchOn).c_Battery(Full).c_VCS(On).c_Car(SwitchOff).c_Battery(Unsafe)
+		% c_VCS(On).c_VCS(Off).c_VCS(On).c_Speed(BelowCCmin, BelowTurnOffMax, Static).c_GasPedal(Pressed).c_VCS(Off).c_Speed(BelowCCmin, AboveTurnOffMax, Backwards).c_Speed(BelowCCmin, BelowTurnOffMax, Static)
 ;
 
 init
