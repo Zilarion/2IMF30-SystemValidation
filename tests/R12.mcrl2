@@ -28,10 +28,15 @@ proc Test =
 	% Req 12 tests
 		% should be FALSE
 		% c_Battery(Full).c_Battery(Unsafe).c_VCS(On)
-
+		
+		% should be FALSE
+		c_Battery(Full).c_Battery(Unsafe).c_DNRP(D).c_VCS(On)
+ 
 		% should be TRUE
-		c_Battery(Unsafe).c_Battery(Safe).c_VCS(On)
+		% c_Battery(Unsafe).c_Battery(Safe).c_VCS(On)
 
+		% Should be TRUE
+		% c_Battery(Unsafe).c_Battery(Safe).c_DNRP(D).c_VCS(On)
 ;
 
 init

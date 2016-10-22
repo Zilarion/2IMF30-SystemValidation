@@ -63,7 +63,7 @@ proc Safety(state:safetyState) =
 		% should be FALSE
 		% aCar(SwitchOn).s_VCS(safetyOn).aBattery(Safe).aBattery(Unsafe).aBattery(Safe).aCar(SwitchOff).aBattery(Unsafe).aBattery(Safe).aVCS(Off).aVCS(On).aCar(SwitchOff).aVCS(Off).Safety(safetyOn);
 
-	% REQ 6 TEST CASES
+	% REQ 9 TEST CASES
 		% short sequence
 		% should be TRUE
 		% aDNRP(D).aBattery(Safe).s_VCS(safetyOn).aGasPedal(Pressed).aMotorForce(Forwards).aDNRP(NP).Safety(safetyOn);
@@ -84,7 +84,12 @@ proc Safety(state:safetyState) =
 		% should be FALSE
 		% aDNRP(D).aBattery(Safe).aBattery(Unsafe).s_VCS(safetyOn).aGasPedal(Pressed).aBattery(Safe).aDNRP(NP).aBattery(Unsafe).aMotorForce(Forwards).aDNRP(NP).Safety(safetyOn);
 
+	% Req 12 tests
+		% should be FALSE
+		aBattery(Full).aBattery(Unsafe).aVCS(On)
 
+		% should be TRUE
+		% aBattery(Unsafe).aBattery(Safe).aVCS(On)
 
 proc Test(state:safetyState) = 
 	% REQ 1 TEST
