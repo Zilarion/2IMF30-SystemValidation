@@ -27,7 +27,7 @@ gulp.task('lts', function () {
 })
 
 // Create pbes from all lps and modal u
-gulp.task('pbes', function() {
+gulp.task('pbes', ['lps'], function() {
   return gulp
     .src(paths.mcf.files)
     .pipe(run('lps2pbes ' + paths.fn + '.lps  -f mcf/<%= file.relative %>  pbes/<%= file.relative %>.pbes'));
