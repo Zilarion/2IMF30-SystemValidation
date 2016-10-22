@@ -23,20 +23,21 @@ act
  	c_VCS : sVirtualCarState;
  	c_ccEnable: sCCState;
 
+
 proc Test =
 	
-	% Req 01 tests
+	% Req 05 tests
 		% should be FALSE
-		% aCar(SwitchOn).aBattery(Full).aBattery(Unsafe)
+		% c_ccEnable(Enabled).aMotorForce(Forwards).aMotorForce(Backwards)
 
 		% Should be FALSE
-		% aCar(SwitchOn).aBattery(Unsafe).c_VCS(Off).aDNRP(D)
+		% c_ccEnable(Enabled).aMotorForce(Backwards)
 
 		% should be TRUE
-		% aCar(SwitchOn).aBattery(Full).aCar(SwitchOff).aBattery(Unsafe)
- 
+		% c_ccEnable(Enabled).aMotorForce(Forwards).aGasPedal(Pressed).c_ccEnable(Disabled).aMotorForce(Backwards)
+
 		% should be TRUE
-		% aCar(SwitchOn).aBattery(Full).c_VCS(On).aCar(SwitchOff).aBattery(Unsafe)
+		% aMotorForce(Forwards).c_ccEnable(Enabled).aGasPedal(Pressed).c_ccEnable(Disabled).aMotorForce(Backwards)
 ;
 
 init

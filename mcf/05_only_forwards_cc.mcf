@@ -1,0 +1,4 @@
+% Requirement 5
+% In between a CC(Enabled) and CC(Disabled), no MotorForce(!Forwards) can ever be seen.
+
+[true* . c_ccEnable(Enabled) . (!c_ccEnable(Disabled))* . (aMotorForce(Backwards) || aMotorForce(Static))] false
