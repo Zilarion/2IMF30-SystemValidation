@@ -1,0 +1,13 @@
+% Requirement 13
+% After a Battery(Unsafe) action a VCS(Off) action should inevitably occur, unless the last VCS(s) seen has s == Off.
+
+nu X (lastWasOff:Bool = false).(
+	[c_VCS(Off)] X(true) &&
+	[c_VCS(On)] X(false) &&
+
+	[aBattery(Unsafe)]
+	(
+		val(lastWasOff) || 
+		mu Y.( [!c_VCS(Off)] Y && <true>true )
+	)
+)
