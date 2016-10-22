@@ -1,0 +1,14 @@
+% Requirement 4
+% The motors should not move when battery is unsafe
+
+
+% Requirement 4a
+% After a Battery(Unsafe), inevitably a MotorForce(Static) must occur (without a Battery change?)
+[true* . c_Battery(Unsafe)] mu Y . (
+	[!aMotorForce(Static)]Y && <true>true
+) &&
+
+% Requirement 4b
+% In between a Battery(Unsafe) action and a Battery(!Unsafe) action, a MotorForce(!StaticBackwards) should never be seen.
+
+[true* . c_Battery(Unsafe) . (!(c_Battery(Safe) || c_Battery(Full)))* . (aMotorForce(Backwards) || aMotorForce(Forwards))] false
