@@ -5,6 +5,8 @@ nu X (lastWasOff:Bool = false).(
 	[c_VCS(Off)] X(true) &&
 	[c_VCS(On)] X(false) &&
 
+	[!(c_VCS(Off) || c_VCS(On))] X(lastWasOff) &&
+
 	[aBattery(Unsafe)]
 	(
 		val(lastWasOff) || 
