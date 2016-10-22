@@ -3,5 +3,5 @@
 
 
 [true* . c_Car(SwitchOn)] mu Y . (
-	([!c_VCS(On) && !c_Car(SwitchOff)] Y && <true>true)
+	[!c_VCS(On) && !c_Car(SwitchOff)] Y && <true>true
 )
