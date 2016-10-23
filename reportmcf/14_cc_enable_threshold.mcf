@@ -1,0 +1,5 @@
+% Requirement 14
+% We must never see a CC(Enable) in between a Speed(BelowCCmin *, *) and a Speed(AboveCCmin, *, *)
+
+forall t:sTurnOffThreshold . forall d:sDirection . exists tp:sTurnOffThreshold . exists dp:sDirection .
+[true* . aSpeed(BelowCCmin, t, d) . (!(aSpeed(AboveCCmin, tp, dp))* . c_ccEnable(Enabled))] false

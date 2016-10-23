@@ -1,0 +1,1 @@
+[true* . c_ccEnable(Enabled) . (!c_ccEnable(Disabled))* . (aMotorForce(Backwards) || aMotorForce(Static))] false

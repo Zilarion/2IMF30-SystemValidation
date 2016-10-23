@@ -11,48 +11,59 @@ sort
 	sVirtualCarState = struct On | Off;
 
 act 
+	aGasPedal : sPedalState;
+  aBrakePedal : sPedalState;
+  aDNRP : sDNRPState;
+  aCar : sOnOffButton;
+  aBattery : sBatteryState;
+  aSpeed : sCCThreshold # sTurnOffThreshold # sDirection;
+  aCC : sCCButton;
   aMotorForce : sDirection;
-	c_GasPedal : sPedalState;
- 	c_BrakePedal : sPedalState;
- 	c_DNRP : sDNRPState;
- 	c_Car : sOnOffButton;
- 	c_Battery : sBatteryState;
- 	c_Speed : sCCThreshold # sTurnOffThreshold # sDirection;
- 	c_CC : sCCButton;
+
  	c_VCS : sVirtualCarState;
  	c_ccEnable: sCCState;
 
 
 proc Test =
 	
-	% Req 01 tests
+	% Req 02 tests
 		% should be FALSE
-		% c_Speed(BelowCCmin, BelowTurnOffMax, Static).c_GasPedal(Pressed).c_VCS(On).c_Speed(BelowCCmin, AboveTurnOffMax, Static).c_VCS(Off).c_Speed(BelowCCmin, BelowTurnOffMax, Static)
+		% aSpeed(BelowCCmin, BelowTurnOffMax, Static).aGasPedal(Pressed).c_VCS(On).aSpeed(BelowCCmin, AboveTurnOffMax, Static).c_VCS(Off).aSpeed(BelowCCmin, BelowTurnOffMax, Static)
 
 		% Should be FALSE
-		% c_Speed(BelowCCmin, BelowTurnOffMax, Static).c_GasPedal(Pressed).c_VCS(Off).c_VCS(On).c_Speed(BelowCCmin, AboveTurnOffMax, Backwards).c_VCS(Off).c_Speed(BelowCCmin, BelowTurnOffMax, Static)
+		% aSpeed(BelowCCmin, BelowTurnOffMax, Static).aGasPedal(Pressed).c_VCS(Off).c_VCS(On).aSpeed(BelowCCmin, AboveTurnOffMax, Backwards).c_VCS(Off).aSpeed(BelowCCmin, BelowTurnOffMax, Static)
+
+		% Should be FALSE
+		% aBattery(Safe).aSpeed(BelowCCmin, BelowTurnOffMax, Static).aGasPedal(Pressed).c_VCS(Off).c_VCS(On).aSpeed(BelowCCmin, AboveTurnOffMax, Backwards).c_VCS(Off).aSpeed(BelowCCmin, BelowTurnOffMax, Static)
+
+		% Should be TRUE
+		% aBattery(Unsafe).aSpeed(BelowCCmin, BelowTurnOffMax, Static).aGasPedal(Pressed).c_VCS(Off).c_VCS(On).aSpeed(BelowCCmin, AboveTurnOffMax, Backwards).c_VCS(Off).aSpeed(BelowCCmin, BelowTurnOffMax, Static)
 
 		% should be TRUE
-		% c_Speed(BelowCCmin, BelowTurnOffMax, Static).c_GasPedal(Pressed).c_VCS(Off).c_VCS(On).c_Speed(BelowCCmin, AboveTurnOffMax, Backwards).c_Speed(BelowCCmin, BelowTurnOffMax, Static).c_VCS(Off)
+		% aSpeed(BelowCCmin, BelowTurnOffMax, Static).aGasPedal(Pressed).c_VCS(Off).c_VCS(On).aSpeed(BelowCCmin, AboveTurnOffMax, Backwards).aSpeed(BelowCCmin, BelowTurnOffMax, Static).c_VCS(Off)
  
 		% should be TRUE
-		% c_VCS(On).c_VCS(Off).c_VCS(On).c_Speed(BelowCCmin, BelowTurnOffMax, Static).c_GasPedal(Pressed).c_VCS(Off).c_Speed(BelowCCmin, AboveTurnOffMax, Backwards).c_Speed(BelowCCmin, BelowTurnOffMax, Static)
+		% c_VCS(On).c_VCS(Off).c_VCS(On).aSpeed(BelowCCmin, BelowTurnOffMax, Static).aGasPedal(Pressed).c_VCS(Off).aSpeed(BelowCCmin, AboveTurnOffMax, Backwards).aSpeed(BelowCCmin, BelowTurnOffMax, Static)
 ;
+
 
 init
 	allow({
+  	%Input actions 
+  	aGasPedal,
+  	aBrakePedal,
+  	aDNRP,
+  	aCar,
+  	aBattery,
+  	aSpeed,
+  	aCC,
+  	% Output actions
+  	%aVCS,
   	aMotorForce,
-
+		%aCCActive,
 		% Communications
 		c_VCS,
-		c_ccEnable,
-		c_Battery,
-		c_GasPedal,
-		c_BrakePedal,
-		c_DNRP,
-		c_Car,
-		c_Speed,
-		c_CC
+		c_ccEnable
 		},
 		 Test
 		);

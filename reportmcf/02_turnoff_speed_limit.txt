@@ -1,7 +1,3 @@
-% Requirement 02
-% Between a Speed(*, AboveTurnOffMax, *) and a Speed(*, BelowTurnOffMax, *) no VCS(Off) should occur, unless the last seen Battery action was Battery(Unsafe).
-
-
 nu X (unsafe:Bool = false).(
 	[aBattery(Unsafe)] X(true) &&
 	[aBattery(Safe) || aBattery(Full)] X(false) &&

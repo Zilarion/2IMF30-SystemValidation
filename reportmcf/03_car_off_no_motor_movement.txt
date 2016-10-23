@@ -1,0 +1,4 @@
+[true* . c_VCS(Off)] mu Y . (
+	[!aMotorForce(Static)]Y && <true>true
+) &&
+[true* . c_VCS(Off) . (!(aMotorForce(Backwards) || aMotorForce(Forwards)))* . c_VCS(On)] false
