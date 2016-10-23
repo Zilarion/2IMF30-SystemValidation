@@ -201,6 +201,8 @@ proc Steering(state:sVirtualCarState, ccthrState:sCCThreshold, enabled:Bool, dnr
 			% Do request to turn CC off			
 			(btn==Disable) ->
 				(aCCActive(Disabled).s_ccEnable(Disabled).Steering(enabled = false))
+			<>
+			  Steering()
 	) <>
 	% Note that it is not required to pass on the message, since no other component is interesting in the cc Button
 	Steering()
