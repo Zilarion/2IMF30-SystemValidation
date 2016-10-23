@@ -10,7 +10,7 @@ nu X (unsafe:Bool = false).(
 	[aCar(SwitchOn)] (
 		val(unsafe) || 
 		mu Y . (
-			[!c_VCS(On) && !aCar(SwitchOff)] Y && <true>true
+			[!aVCS(On) && !aCar(SwitchOff)] Y && <true>true
 		)
 	)
 )

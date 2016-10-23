@@ -34,7 +34,6 @@ act
   	aCC : sCCButton;
   	
   	% Output actions
-  	% Use c_VCS and c_CCActive instead when writing checking formulas
   	aVCS : sVirtualCarState;
   	aMotorForce : sDirection;
 		aCCActive: sCCState;
@@ -108,10 +107,6 @@ sum ccthr:sCCThreshold.sum onoffthr:sTurnOffThreshold.sum dir:sDirection.aSpeed(
 % --------------------
 
 proc Safety(state:sVirtualCarState, battery:sBatteryState, onoffthrState:sTurnOffThreshold) =
-	
-	% State changes
-	% s_VCS(state).Safety() +
-	
 	% Car on/off button interactions
 	(sum btn:sOnOffButton.r_Car_Safety(btn).
 		% Turn the car on
@@ -286,7 +281,9 @@ init
 		c_Car,
 		c_Speed,
 		c_CC,
-		c_InputHandled
+		c_InputHandled,
+		c_VCS,
+		c_ccEnable
 	},
 	allow({
 		%Input actions 
