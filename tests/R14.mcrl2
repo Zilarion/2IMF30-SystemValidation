@@ -20,27 +20,27 @@ act
   aCC : sCCButton;
   aMotorForce : sDirection;
 
- 	c_VCS : sVirtualCarState;
- 	c_ccEnable: sCCState;
+ 	aVCS : sVirtualCarState;
+ 	aCCActive: sCCState;
 
 
 proc Test =
 	
 	% Req 14 tests
 		% should be FALSE
-		% aSpeed(BelowCCmin, BelowTurnOffMax, Static).c_ccEnable(Enabled)
+		% aSpeed(BelowCCmin, BelowTurnOffMax, Static).aCCActive(Enabled)
 
 		% should be FALSE
-		% aSpeed(AboveCCmin, BelowTurnOffMax, Static).aSpeed(BelowCCmin, BelowTurnOffMax, Static).c_ccEnable(Enabled)
+		% aSpeed(AboveCCmin, BelowTurnOffMax, Static).aSpeed(BelowCCmin, BelowTurnOffMax, Static).aCCActive(Enabled)
 
 		% should be TRUE
-		% aSpeed(AboveCCmin, BelowTurnOffMax, Static).c_ccEnable(Enabled)
+		% aSpeed(AboveCCmin, BelowTurnOffMax, Static).aCCActive(Enabled)
 
 		% should be TRUE
-		% aSpeed(AboveCCmin, BelowTurnOffMax, Static).aGasPedal(Pressed).c_ccEnable(Enabled)
+		% aSpeed(AboveCCmin, BelowTurnOffMax, Static).aGasPedal(Pressed).aCCActive(Enabled)
 
 		% should be TRUE
-		% aSpeed(AboveCCmin, BelowTurnOffMax, Static).c_ccEnable(Disabled)
+		% aSpeed(AboveCCmin, BelowTurnOffMax, Static).aCCActive(Disabled)
 ;
 
 init
@@ -54,12 +54,9 @@ init
   	aSpeed,
   	aCC,
   	% Output actions
-  	%aVCS,
+  	aVCS,
   	aMotorForce,
-		%aCCActive,
-		% Communications
-		c_VCS,
-		c_ccEnable
+		aCCActive
 		},
 		 Test
 		);

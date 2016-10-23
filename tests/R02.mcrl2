@@ -21,7 +21,7 @@ act
   aMotorForce : sDirection;
 
  	aVCS : sVirtualCarState;
- 	aCCEnable: sCCState;
+ 	aCCActive: sCCState;
 
 
 proc Test =
@@ -43,7 +43,7 @@ proc Test =
 		% aSpeed(BelowCCmin, BelowTurnOffMax, Static).aGasPedal(Pressed).aVCS(Off).aVCS(On).aSpeed(BelowCCmin, AboveTurnOffMax, Backwards).aSpeed(BelowCCmin, BelowTurnOffMax, Static).aVCS(Off)
  
 		% should be TRUE
-		 aVCS(On).aVCS(Off).aVCS(On).aSpeed(BelowCCmin, BelowTurnOffMax, Static).aGasPedal(Pressed).aVCS(Off).aSpeed(BelowCCmin, AboveTurnOffMax, Backwards).aSpeed(BelowCCmin, BelowTurnOffMax, Static)
+		% aVCS(On).aVCS(Off).aVCS(On).aSpeed(BelowCCmin, BelowTurnOffMax, Static).aGasPedal(Pressed).aVCS(Off).aSpeed(BelowCCmin, AboveTurnOffMax, Backwards).aSpeed(BelowCCmin, BelowTurnOffMax, Static)
 ;
 
 
@@ -60,7 +60,7 @@ init
   	% Output actions
   	aVCS,
   	aMotorForce,
-		aCCEnable
+		aCCActive
 		},
 		 Test
 		);
