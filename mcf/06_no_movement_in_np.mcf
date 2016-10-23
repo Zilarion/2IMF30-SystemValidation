@@ -4,7 +4,7 @@
 % Requirement 6a
 % After a DNRP(NP) action, inevitably a MotorForce(NoForce) should occur
 ([true* . aDNRP(NP)] mu Y . (
-	[!aMotorForce(NoFOrce)]Y && <true>true
+	[!aMotorForce(NoForce)]Y && <true>true
 )) &&
 
 % Requirement 6b
