@@ -160,7 +160,7 @@ proc Steering(state:sVirtualCarState, ccthrState:sCCThreshold, enabled:Bool, dnr
 		<> 
 		(
 			(
-				(enabled == true ) -> aCCActive(Enabled).s_ccEnable(Enabled) <> aCCActive(Disabled).s_ccEnable(Disabled)
+				(enabled == true ) -> (aCCActive(Enabled).s_ccEnable(Enabled)) <> (aCCActive(Disabled).s_ccEnable(Disabled))
 			).Steering(gas = i_gas)
 		)
 	)
@@ -196,11 +196,11 @@ proc Steering(state:sVirtualCarState, ccthrState:sCCThreshold, enabled:Bool, dnr
 	(state==On && ccthrState == AboveCCmin && dnrp == D && brake == Released) -> (		
 			% Do request to turn CC on
 			(btn==Enable) ->
-				aCCActive(Enabled).s_ccEnable(Enabled).Steering(enabled = true)
+				(aCCActive(Enabled).s_ccEnable(Enabled).Steering(enabled = true))
 			<>
 			% Do request to turn CC off			
 			(btn==Disable) ->
-				aCCActive(Enabled).s_ccEnable(Disabled).Steering(enabled = false)
+				(aCCActive(Enabled).s_ccEnable(Disabled).Steering(enabled = false))
 	) <>
 	% Note that it is not required to pass on the message, since no other component is interesting in the cc Button
 	Steering()
