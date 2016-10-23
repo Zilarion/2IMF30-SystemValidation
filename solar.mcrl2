@@ -9,7 +9,7 @@ sort
 	sCCThreshold = struct BelowCCmin | AboveCCmin;
 	sTurnOffThreshold = struct BelowTurnOffMax | AboveTurnOffMax;
 	sDirection = struct Forwards | Backwards | Static;
-	sMotorForce = struct ApplyForce | ApplyBrake | NoForce;
+	sMotorForce = struct ApplyForceForwards | ApplyForceBackwards | ApplyBrake | NoForce;
 	sCCState = struct Enabled | Disabled;
 	sCCButton = struct Enable | Disable;
 	sVirtualCarState = struct On | Off;
@@ -264,7 +264,7 @@ proc ApplyMotorForce(m_vcs:sVirtualCarState, m_dnrp:sDNRPState, m_dir:sDirection
 			(m_battery == Full && m_dir == Forwards) ->
 				aMotorForce(NoForce)
 			<>
-				aMotorForce(ApplyForce)
+				aMotorForce(ApplyForceBackwards)
 		<> %Neither gas not brake is pressed
 			aMotorForce(NoForce)
 ; %End of ApplyMotorForce
