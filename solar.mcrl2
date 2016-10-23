@@ -64,13 +64,13 @@ act
   	s_Speed : sCCThreshold # sTurnOffThreshold # sDirection;
   	s_CC : sCCButton;
   	
-  	r_GasPedal_MF : sPedalState;
-  	r_BrakePedal_MF : sPedalState;
-  	r_DNRP_MF : sDNRPState;
+  	r_GasPedal_MF, r_GasPedal_Steering : sPedalState;
+  	r_BrakePedal_MF, r_BrakePedal_Steering : sPedalState;
+  	r_DNRP_MF, r_DNRP_Steering : sDNRPState;
   	r_Car_Safety : sOnOffButton;
   	r_Battery_Safety : sBatteryState;
   	r_Battery_MF : sBatteryState;
-  	r_Speed_MF : sCCThreshold # sTurnOffThreshold # sDirection;
+  	r_Speed_MF, r_Speed_Safety, r_Speed_Steering : sCCThreshold # sTurnOffThreshold # sDirection;
   	r_CC_Steering : sCCButton;
 
 		% Inter process communications
@@ -107,7 +107,7 @@ sum ccthr:sCCThreshold.sum onoffthr:sTurnOffThreshold.sum dir:sDirection.aSpeed(
 % Safety Procedure
 % --------------------
 
-proc Safety(state:sVirtualCarState, battery:sBatteryState) =
+proc Safety(state:sVirtualCarState, battery:sBatteryState, onoffthrState:sTurnOffThreshold) =
 	
 	% State changes
 	% s_VCS(state).Safety() +
@@ -119,8 +119,7 @@ proc Safety(state:sVirtualCarState, battery:sBatteryState) =
 			s_VCS(On).Safety(state=On)
 		<> 
 		% Turn the car off
-		% TODO Add speed check here
-		(btn == SwitchOff) ->
+		(btn == SwitchOff && onoffthrState == AboveTurnOffMax) ->
 			s_VCS(Off).Safety(state=Off)
 		<> 
 		% We don't have to change anything
@@ -131,31 +130,56 @@ proc Safety(state:sVirtualCarState, battery:sBatteryState) =
 	+ r_Battery_Safety(Safe).Safety(battery=Safe)
 	+ r_Battery_Safety(Full).Safety(battery=Full)
 	
+	+ sum ccthr:sCCThreshold.sum onoffthr:sTurnOffThreshold.sum dir:sDirection.
+		r_Speed_Safety(ccthr, onoffthr, dir).Safety(onoffthrState = onoffthr)
+	
 	+ s_Safety_Done.Safety();
 
 % --------------------
 % Steering procedure
 % --------------------
 
-proc Steering(state:sVirtualCarState) =
+proc Steering(state:sVirtualCarState, ccthrState:sCCThreshold, enabled:Bool, dnrp:sDNRPState, gas:sPedalState, brake:sPedalState) =
 	% Process messages
-	sum data:sVirtualCarState.r_VCS_steer(data).Steering(data)
+	sum data:sVirtualCarState.r_VCS_steer(data).((data == Off && enabled == true) -> (s_ccEnable(Disabled).Steering(state = Off, enabled = false)) <> Steering(state = data))
 	
-	%TODO add remaining checks on when to enable CC
-	% Interactions only possible when active
+	+ sum i_gas:sPedalState.	r_GasPedal_Steering(i_gas).			
+	(
+		(i_gas == Pressed && enabled == true)	-> 
+		(
+			s_ccEnable(Disabled).Steering(gas = i_gas, enabled = false)
+		) 
+		<> 
+			Steering(gas = i_gas)
+	)
+	+ sum i_brake:sPedalState.r_BrakePedal_Steering(i_brake).	
+	(
+		(i_brake == Pressed && enabled == true)-> 
+		(
+			s_ccEnable(Disabled).Steering(brake = i_brake, enabled = false)
+		) 
+		<> 
+			Steering(brake = i_brake) 
+	)
+	+ sum i_dnrp:sDNRPState.r_DNRP_Steering(i_dnrp).Steering(dnrp = i_dnrp)
+	
 	+
 	sum btn:sCCButton.r_CC_Steering(btn). 
-	(state==On) -> (		
+	(state==On && ccthrState == AboveCCmin && dnrp == D && brake == Released) -> (		
 			% Do request to turn CC on
 			(btn==Enable) ->
-				s_ccEnable(Enabled).Steering()
+				s_ccEnable(Enabled).Steering(enabled = true)
 			<>
 			% Do request to turn CC off			
 			(btn==Disable) ->
-				s_ccEnable(Disabled).Steering()
+				s_ccEnable(Disabled).Steering(enabled = false)
 	) <>
 	Steering()
 	
+	% Note that the ccthr only matter for enabling the CC.
+	+ sum ccthr:sCCThreshold.sum onoffthr:sTurnOffThreshold.sum dir:sDirection.
+		r_Speed_Steering(ccthr, onoffthr, dir).Steering(ccthrState = ccthr)
+		
 	+ s_Steering_Done.Steering();
 
 % --------------------
@@ -259,16 +283,16 @@ init
 		{
 			s_VCS | r_VCS_steer | r_VCS_MF -> c_VCS,
 			s_ccEnable | r_ccEnable_MF -> c_ccEnable,
-			s_GasPedal | r_GasPedal_MF -> c_GasPedal,
-  		s_BrakePedal | r_BrakePedal_MF	-> c_BrakePedal,
-  		s_DNRP | r_DNRP_MF -> c_DNRP,
+			s_GasPedal | r_GasPedal_MF | r_GasPedal_Steering -> c_GasPedal,
+  		s_BrakePedal | r_BrakePedal_MF | r_BrakePedal_Steering	-> c_BrakePedal,
+  		s_DNRP | r_DNRP_MF | r_DNRP_Steering -> c_DNRP,
   		s_Car | r_Car_Safety	-> c_Car,
   		s_Battery	| r_Battery_Safety	| r_Battery_MF	-> c_Battery,
-  		s_Speed | r_Speed_MF	-> c_Speed,
+  		s_Speed | r_Speed_MF | r_Speed_Safety | r_Speed_Steering	-> c_Speed,
   		s_CC | r_CC_Steering	-> c_CC,
   		r_InputHandled | s_MF_Done | s_Steering_Done | s_Safety_Done -> c_InputHandled
 		},
 		 MotorForce(Off, NP, Static, Released, Released, Full, Disabled) ||
-		 Safety(Off, Safe) || Steering(Off) 
+		 Safety(Off, Safe, BelowTurnOffMax) || Steering(Off, BelowCCmin, false, NP, Released, Released) 
 		 || InputHandler
 		)));
