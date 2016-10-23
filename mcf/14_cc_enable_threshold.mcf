@@ -1,5 +1,10 @@
 % Requirement 14
 % We must never see a CCActive(Enabled) in between a Speed(BelowCCmin *, *) and a Speed(AboveCCmin, *, *)
 
-forall t,tp:sTurnOffThreshold . forall d,dp:sDirection .
-[true* . aSpeed(BelowCCmin, t, d) . (!(aSpeed(AboveCCmin, tp, dp))* . aCCActive(Enabled))] false
+% Exists of forall bij de tweede?
+
+[true* . 
+	(forall t:sTurnOffThreshold . forall d:sDirection . aSpeed(BelowCCmin, t, d)) .
+	(!(forall tp:sTurnOffThreshold . forall dp:sDirection . aSpeed(AboveCCmin, tp, dp))* .
+	aCCActive(Enabled))
+] false

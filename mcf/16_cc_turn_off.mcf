@@ -1,5 +1,5 @@
 % Requirement 16
-% If the last ccEnable(s) action had s==Enabled, then after a CC(Disable), BrakePedal(Pressed) or GasPedal(Pressed) action, inevitably a ccEnable(Disabled) should be seen.
+% If the last CCActive(s) action had s==Enabled, then after a CC(Disable), BrakePedal(Pressed) or GasPedal(Pressed) action, inevitably a CCActive(Disabled) should be seen.
 
 nu X (ccDisabled:Bool = false) . (
 	[aCCActive(Enabled)] X(false) &&
