@@ -238,7 +238,7 @@ proc ApplyMotorForce(m_vcs:sVirtualCarState, m_dnrp:sDNRPState, m_dir:sDirection
 		% TODO Should we also check DNRP states when applying CC?
 		% Note that CC module should also so this.
 		% Second note: should we check on battery safety level?
-		aMotorForce(ApplyForce)
+		aMotorForce(ApplyForceForwards)
 	<> (m_dnrp == NP ) -> %from here on: m_vcs == On
 		aMotorForce(NoForce)
 	<> (m_dnrp == D) ->
@@ -251,7 +251,7 @@ proc ApplyMotorForce(m_vcs:sVirtualCarState, m_dnrp:sDNRPState, m_dir:sDirection
 			(m_battery == Full && m_dir == Backwards) ->
 				aMotorForce(NoForce)
 			<>
-				aMotorForce(ApplyForce)
+				aMotorForce(ApplyForceForwards)
 		<> %Neither gas not brake is pressed
 			aMotorForce(NoForce)
 	<> %(m_dnrp == R)
