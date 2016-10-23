@@ -4,10 +4,10 @@
 
 % Requirement 3a
 % After a VCS(Off), inevitably a MotorForce(Static) must occur (without a VCS change?)
-[true* . c_VCS(Off)] mu Y . (
+[true* . aVCS(Off)] mu Y . (
 	[!aMotorForce(Static)]Y && <true>true
 ) &&
 
 % Requirement 3b
 % In between a VCS(Off) action and a VCS(On) action, a MotorForce(Forwards) or MotorForce(Backwards) should never be seen.
-[true* . c_VCS(Off) . (!(aMotorForce(Backwards) || aMotorForce(Forwards)))* . c_VCS(On)] false
+[true* . aVCS(Off) . (!aVCS(On))* . (aMotorForce(Backwards) || aMotorForce(Forwards))] false
