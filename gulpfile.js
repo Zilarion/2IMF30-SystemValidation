@@ -5,7 +5,7 @@ var runSequence = require('run-sequence')
 
 // Required paths
 var paths = {
-  fn: 'solar',
+  fn: 'solar_1_1_1',
   mcf: {
     files: 'mcf/*.mcf',
     folder: 'mcf'
@@ -32,10 +32,10 @@ gulp.task('convert', function () {
 })
 
 // Create pbes from all lps and modal u
-gulp.task('pbes', ['lps'], function() {
+gulp.task('pbes', function() {
   return gulp
     .src(paths.mcf.files)
-    .pipe(run('lps2pbes ' + paths.fn + '.lps  -f mcf/<%= file.relative %>  pbes/<%= file.relative %>.pbes'));
+    .pipe(run('lts2pbes ' + paths.fn + '.lts  -f mcf/<%= file.relative %>  pbes/<%= file.relative %>.pbes'));
 })
 
 // Validate all pbes
