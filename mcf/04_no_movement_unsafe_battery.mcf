@@ -3,12 +3,12 @@
 
 
 % Requirement 4a
-% After a Battery(Unsafe), inevitably a MotorForce(Static) must occur (without a Battery change?)
+% After a Battery(Unsafe), inevitably a MotorForce(NoForce) must occur (without a Battery change?)
 ([true* . aBattery(Unsafe)] mu Y . (
-	[!aMotorForce(Static)]Y && <true>true
+	[!aMotorForce(NoForce)]Y && <true>true
 )) &&
 
 % Requirement 4b
-% In between a Battery(Unsafe) action and a Battery(!Unsafe) action, a MotorForce(!Static) should never be seen.
+% In between a Battery(Unsafe) action and a Battery(!Unsafe) action, a MotorForce(!NoForce) should never be seen.
 
-[true* . aBattery(Unsafe) . (!(aBattery(Safe) || aBattery(Full)))* . (aMotorForce(Backwards) || aMotorForce(Forwards))] false
+[true* . aBattery(Unsafe) . (!(aBattery(Safe) || aBattery(Full)))* . (aMotorForce(ApplyForceBackwards) || aMotorForce(ApplyForceForwards))] false

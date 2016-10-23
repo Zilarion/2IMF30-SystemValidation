@@ -1,4 +1,0 @@
-% Requirement 8
-% After an Battery(Full) action we must never see a MotorForce(Backwards) action if driving forwards, nor should be ever see a MotorForce(Forwards) actions when driving backwards.
-
-[true* . aBattery(Full) . (!(aBattery(Safe) || aBattery(Unsafe))* . aMotorForce(Brake)] false

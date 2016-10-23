@@ -1,13 +1,10 @@
-% Requirement 16
-% If the last CCActive(s) action had s==Enabled, then after a CC(Disable), BrakePedal(Pressed) or GasPedal(Pressed) action, inevitably a CCActive(Disabled) should be seen.
-
 nu X (ccDisabled:Bool = false) . (
 	[aCCActive(Enabled)] X(false) &&
 	[aCCActive(Disabled)] X(true) &&
 
 	[!(aCCActive(Disabled) || aCCActive(Enabled))] X(ccDisabled) &&
 
-	[aCC(Disable)](
+	[aGasPedal(Pressed)](
 		val(ccDisabled) ||
 		mu Y . ( [!aCCActive(Disabled)] Y && <true>true )
 	)

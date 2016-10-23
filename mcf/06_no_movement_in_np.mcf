@@ -2,11 +2,11 @@
 % The motor should not move when the DNRP state is NP.
 
 % Requirement 6a
-% After a DNRP(NP) action, inevitably a MotorForce(Static) should occur
+% After a DNRP(NP) action, inevitably a MotorForce(NoForce) should occur
 ([true* . aDNRP(NP)] mu Y . (
-	[!aMotorForce(Static)]Y && <true>true
+	[!aMotorForce(NoFOrce)]Y && <true>true
 )) &&
 
 % Requirement 6b
-% In between a DNRP(NP) action and a DNRP(!NP) action, a MotorForce(!Static) should never be seen.
-[true* . aDNRP(NP) . (!(aDNRP(D) || aDNRP(R)))* . (aMotorForce(Backwards) || aMotorForce(Forwards))] false
+% In between a DNRP(NP) action and a DNRP(!NP) action, a MotorForce(!NoForce) should never be seen.
+[true* . aDNRP(NP) . (!(aDNRP(D) || aDNRP(R)))* . (aMotorForce(ApplyForceBackwards) || aMotorForce(ApplyForceForwards))] false

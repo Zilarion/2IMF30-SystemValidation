@@ -16,7 +16,7 @@ nu X (ds:Bool = false, bp:Bool = false, bs:Bool = false).(
 
 	[!(exists d:sDNRPState . aDNRP(d) || exists d:sPedalState . aBrakePedal(d) || exists d:sBatteryState . aBattery(d))] X(ds, bp, bs) && 
 
-	% Gas pedal is pressed after some finite amount of time, we should see an aMotorForce(Backwards) action
+	% Gas pedal is pressed after some finite amount of time, we should see an aMotorForce(ApplyForceBackwards) action
 	[aGasPedal(Pressed)] mu Y (dsL:Bool = ds, bpL:Bool = bp, bsL:Bool = bs) . (
 		% DNRP changes
 		[aDNRP(R)] Y(true, bpL, bsL) && 
@@ -30,6 +30,6 @@ nu X (ds:Bool = false, bp:Bool = false, bs:Bool = false).(
 		[aBattery(Unsafe)] Y(dsL, bpL, false) &&
 		[aBattery(Safe) || aBattery(Full)] Y(dsL, bpL, true) &&
 
-		([!aMotorForce(Backwards)] Y(dsL, bpL, bsL) && <true>true) && val(dsL && !bpL && bsL)
+		([!aMotorForce(ApplyForceBackwards)] Y(dsL, bpL, bsL) && <true>true) && val(dsL && !bpL && bsL)
 	)
 )
