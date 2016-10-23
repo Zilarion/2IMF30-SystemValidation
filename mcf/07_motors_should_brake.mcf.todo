@@ -3,8 +3,8 @@
 
 % Requirement 7a
 nu X (vcs:Bool = false, speed:sDirection = Static, bp:Bool = false, bat:Bool = false). (
-	[c_VCS(On)] X(true, speed, bp, bat) &&
-	[c_VCS(Off)] X(false, speed, bp, bat) &&
+	[aVCS(On)] X(true, speed, bp, bat) &&
+	[aVCS(Off)] X(false, speed, bp, bat) &&
 
 	forall dspeed:sDirection . forall cc:sCCThreshold . forall t:sTurnOffThreshold . [aSpeed(cc, t, dspeed)] X(vcs, dspeed, bp, bat) &&
 
@@ -15,7 +15,7 @@ nu X (vcs:Bool = false, speed:sDirection = Static, bp:Bool = false, bat:Bool = f
 	[aBattery(Safe) || aBattery(Unsafe)] X(vcs, speed, bp, true) &&
 
 	[!(
-	exists dvcs: sVirtualCarState . c_VCS(dvcs) || 
+	exists dvcs: sVirtualCarState . aVCS(dvcs) || 
 	exists dspeed:sDirection . exists cc:sCCThreshold . exists t:sTurnOffThreshold . aSpeed(cc, t, dspeed) ||
 	exists dbp:sPedalState . aBrakePedal(dbp) || 
 	exists dbat:sBatteryState . aBattery(dbat)
