@@ -1,0 +1,9 @@
+nu X (unsafe:Bool = false).(
+	[aBattery(Unsafe)] X(true) &&
+	[aBattery(Safe) || aBattery(Full)] X(false) &&
+
+	[!(exists d:sBatteryState . aBattery(d))] X(unsafe) &&
+
+	forall c:sCCThreshold . forall d:sDirection . exists cp:sCCThreshold . exists dp:sDirection .
+	[aSpeed(c, AboveTurnOffMax, d) . (!aSpeed(cp, BelowTurnOffMax, dp))* . c_VCS(Off)] (false || val(unsafe))
+)
