@@ -20,30 +20,30 @@ act
   aCC : sCCButton;
   aMotorForce : sDirection;
 
- 	c_VCS : sVirtualCarState;
- 	c_ccEnable: sCCState;
+ 	aVCS : sVirtualCarState;
+ 	aCCEnable: sCCState;
 
 
 proc Test =
 	
 	% Req 02 tests
 		% should be FALSE
-		% aSpeed(BelowCCmin, BelowTurnOffMax, Static).aGasPedal(Pressed).c_VCS(On).aSpeed(BelowCCmin, AboveTurnOffMax, Static).c_VCS(Off).aSpeed(BelowCCmin, BelowTurnOffMax, Static)
+		% aSpeed(BelowCCmin, BelowTurnOffMax, Static).aGasPedal(Pressed).aVCS(On).aSpeed(BelowCCmin, AboveTurnOffMax, Static).aVCS(Off).aSpeed(BelowCCmin, BelowTurnOffMax, Static)
 
 		% Should be FALSE
-		% aSpeed(BelowCCmin, BelowTurnOffMax, Static).aGasPedal(Pressed).c_VCS(Off).c_VCS(On).aSpeed(BelowCCmin, AboveTurnOffMax, Backwards).c_VCS(Off).aSpeed(BelowCCmin, BelowTurnOffMax, Static)
+		% aSpeed(BelowCCmin, BelowTurnOffMax, Static).aGasPedal(Pressed).aVCS(Off).aVCS(On).aSpeed(BelowCCmin, AboveTurnOffMax, Backwards).aVCS(Off).aSpeed(BelowCCmin, BelowTurnOffMax, Static)
 
 		% Should be FALSE
-		% aBattery(Safe).aSpeed(BelowCCmin, BelowTurnOffMax, Static).aGasPedal(Pressed).c_VCS(Off).c_VCS(On).aSpeed(BelowCCmin, AboveTurnOffMax, Backwards).c_VCS(Off).aSpeed(BelowCCmin, BelowTurnOffMax, Static)
+		% aBattery(Safe).aSpeed(BelowCCmin, BelowTurnOffMax, Static).aGasPedal(Pressed).aVCS(Off).aVCS(On).aSpeed(BelowCCmin, AboveTurnOffMax, Backwards).aVCS(Off).aSpeed(BelowCCmin, BelowTurnOffMax, Static)
 
 		% Should be TRUE
-		% aBattery(Unsafe).aSpeed(BelowCCmin, BelowTurnOffMax, Static).aGasPedal(Pressed).c_VCS(Off).c_VCS(On).aSpeed(BelowCCmin, AboveTurnOffMax, Backwards).c_VCS(Off).aSpeed(BelowCCmin, BelowTurnOffMax, Static)
+		% aBattery(Unsafe).aSpeed(BelowCCmin, BelowTurnOffMax, Static).aGasPedal(Pressed).aVCS(Off).aVCS(On).aSpeed(BelowCCmin, AboveTurnOffMax, Backwards).aVCS(Off).aSpeed(BelowCCmin, BelowTurnOffMax, Static)
 
 		% should be TRUE
-		% aSpeed(BelowCCmin, BelowTurnOffMax, Static).aGasPedal(Pressed).c_VCS(Off).c_VCS(On).aSpeed(BelowCCmin, AboveTurnOffMax, Backwards).aSpeed(BelowCCmin, BelowTurnOffMax, Static).c_VCS(Off)
+		% aSpeed(BelowCCmin, BelowTurnOffMax, Static).aGasPedal(Pressed).aVCS(Off).aVCS(On).aSpeed(BelowCCmin, AboveTurnOffMax, Backwards).aSpeed(BelowCCmin, BelowTurnOffMax, Static).aVCS(Off)
  
 		% should be TRUE
-		% c_VCS(On).c_VCS(Off).c_VCS(On).aSpeed(BelowCCmin, BelowTurnOffMax, Static).aGasPedal(Pressed).c_VCS(Off).aSpeed(BelowCCmin, AboveTurnOffMax, Backwards).aSpeed(BelowCCmin, BelowTurnOffMax, Static)
+		 aVCS(On).aVCS(Off).aVCS(On).aSpeed(BelowCCmin, BelowTurnOffMax, Static).aGasPedal(Pressed).aVCS(Off).aSpeed(BelowCCmin, AboveTurnOffMax, Backwards).aSpeed(BelowCCmin, BelowTurnOffMax, Static)
 ;
 
 
@@ -58,12 +58,9 @@ init
   	aSpeed,
   	aCC,
   	% Output actions
-  	%aVCS,
+  	aVCS,
   	aMotorForce,
-		%aCCActive,
-		% Communications
-		c_VCS,
-		c_ccEnable
+		aCCEnable
 		},
 		 Test
 		);
