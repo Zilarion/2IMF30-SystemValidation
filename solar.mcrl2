@@ -34,7 +34,6 @@ act
   	aCC : sCCButton;
   	
   	% Output actions
-  	% Use c_VCS and c_CCActive instead when writing checking formulas
   	aVCS : sVirtualCarState;
   	aMotorForce : sDirection;
 		aCCActive: sCCState;
@@ -282,7 +281,9 @@ init
 		c_Car,
 		c_Speed,
 		c_CC,
-		c_InputHandled
+		c_InputHandled,
+		c_VCS,
+		c_ccEnable
 	},
 	allow({
 		%Input actions 
