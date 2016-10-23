@@ -193,9 +193,9 @@ proc Steering(state:sVirtualCarState, ccthrState:sCCThreshold, enabled:Bool, dnr
 	
 	% Receive ccButton
 	+ sum btn:sCCButton.r_CC_Steering(btn). 
-	(state==On && ccthrState == AboveCCmin && dnrp == D && brake == Released) -> (		
+	(state==On) -> (		
 			% Do request to turn CC on
-			(btn==Enable) ->
+			(btn==Enable && ccthrState == AboveCCmin && dnrp == D && brake == Released) ->
 				(aCCActive(Enabled).s_ccEnable(Enabled).Steering(enabled = true))
 			<>
 			% Do request to turn CC off			
