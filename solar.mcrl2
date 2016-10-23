@@ -35,9 +35,9 @@ act
   	
   	% Output actions
   	% Use c_VCS and c_CCActive instead when writing checking formulas
-  	%aVCS : sVirtualCarState;
+  	aVCS : sVirtualCarState;
   	aMotorForce : sDirection;
-		%aCCActive: sCCState;
+		aCCActive: sCCState;
   	
 % --------------------
 % Communication definitions
@@ -101,7 +101,7 @@ sum ccthr:sCCThreshold.sum onoffthr:sTurnOffThreshold.sum dir:sDirection.aSpeed(
 %sum cc:sCCButton.s_CC(cc) +
 %sum ccthr:sCCThreshold.sum onoffthr:sTurnOffThreshold.sum dir:sDirection.s_Speed(ccthr, onoffthr, dir)
 
-).InputHandler;
+).r_InputHandled.InputHandler;
 	
 % --------------------
 % Safety Procedure
@@ -116,22 +116,22 @@ proc Safety(state:sVirtualCarState, battery:sBatteryState, onoffthrState:sTurnOf
 	(sum btn:sOnOffButton.r_Car_Safety(btn).
 		% Turn the car on
 		(btn == SwitchOn && battery!=Unsafe) ->
-			s_VCS(On).Safety(state=On)
+			aVCS(On).s_VCS(On).Safety(state=On)
 		<> 
 		% Turn the car off
 		(btn == SwitchOff && onoffthrState == AboveTurnOffMax) ->
-			s_VCS(Off).Safety(state=Off)
+			aVCS(Off).s_VCS(Off).Safety(state=Off)
 		<> 
 		% We don't have to change anything
 		Safety()
 		)
 		
-	+ r_Battery_Safety(Unsafe).s_VCS(Off).Safety(state=Off, battery=Unsafe)
-	+ r_Battery_Safety(Safe).Safety(battery=Safe)
-	+ r_Battery_Safety(Full).Safety(battery=Full)
+	+ r_Battery_Safety(Unsafe).aVCS(Off).s_VCS(Off).Safety(state=Off, battery=Unsafe)
+	+ r_Battery_Safety(Safe).aVCS(state).s_VCS(state).Safety(battery=Safe)
+	+ r_Battery_Safety(Full).aVCS(state).s_VCS(state).Safety(battery=Full)
 	
 	+ sum ccthr:sCCThreshold.sum onoffthr:sTurnOffThreshold.sum dir:sDirection.
-		r_Speed_Safety(ccthr, onoffthr, dir).Safety(onoffthrState = onoffthr)
+		r_Speed_Safety(ccthr, onoffthr, dir).aVCS(state).s_VCS(state).Safety(onoffthrState = onoffthr)
 	
 	+ s_Safety_Done.Safety();
 
@@ -140,9 +140,21 @@ proc Safety(state:sVirtualCarState, battery:sBatteryState, onoffthrState:sTurnOf
 % --------------------
 
 proc Steering(state:sVirtualCarState, ccthrState:sCCThreshold, enabled:Bool, dnrp:sDNRPState, gas:sPedalState, brake:sPedalState) =
-	% Process messages
-	sum data:sVirtualCarState.r_VCS_steer(data).((data == Off && enabled == true) -> (s_ccEnable(Disabled).Steering(state = Off, enabled = false)) <> Steering(state = data))
+	% Receive VCS
+	sum data:sVirtualCarState.r_VCS_steer(data).
+	(
+		(data == Off && enabled == true) -> 
+		(
+			s_ccEnable(Disabled).Steering(state = Off, enabled = false)
+		) <> 
+		(
+			(
+				(enabled == true ) -> s_ccEnable(Enabled) <> s_ccEnable(Disabled)
+			).Steering(state = data)
+		)
+	)
 	
+	% Receive Gas
 	+ sum i_gas:sPedalState.	r_GasPedal_Steering(i_gas).			
 	(
 		(i_gas == Pressed && enabled == true)	-> 
@@ -150,21 +162,41 @@ proc Steering(state:sVirtualCarState, ccthrState:sCCThreshold, enabled:Bool, dnr
 			s_ccEnable(Disabled).Steering(gas = i_gas, enabled = false)
 		) 
 		<> 
-			Steering(gas = i_gas)
+		(
+			(
+				(enabled == true ) -> s_ccEnable(Enabled) <> s_ccEnable(Disabled)
+			).Steering(gas = i_gas)
+		)
 	)
+	% Receive Brake
 	+ sum i_brake:sPedalState.r_BrakePedal_Steering(i_brake).	
 	(
 		(i_brake == Pressed && enabled == true)-> 
 		(
 			s_ccEnable(Disabled).Steering(brake = i_brake, enabled = false)
 		) 
-		<> 
-			Steering(brake = i_brake) 
+		<>
+		( 
+			(
+				(enabled == true ) -> s_ccEnable(Enabled) <> s_ccEnable(Disabled)
+			).Steering(brake = i_brake) 
+		)
 	)
-	+ sum i_dnrp:sDNRPState.r_DNRP_Steering(i_dnrp).Steering(dnrp = i_dnrp)
+	% Receive DNRP
+	+ sum i_dnrp:sDNRPState.r_DNRP_Steering(i_dnrp).
+	(i_dnrp == NP) ->
+	(
+		s_ccEnable(Disabled).Steering(dnrp = i_dnrp, enabled = false)
+	)
+	<>
+	(
+		(
+			(enabled == true ) -> s_ccEnable(Enabled) <> s_ccEnable(Disabled)
+		).Steering(dnrp = i_dnrp)
+	)
 	
-	+
-	sum btn:sCCButton.r_CC_Steering(btn). 
+	% Receive ccButton
+	+ sum btn:sCCButton.r_CC_Steering(btn). 
 	(state==On && ccthrState == AboveCCmin && dnrp == D && brake == Released) -> (		
 			% Do request to turn CC on
 			(btn==Enable) ->
@@ -174,9 +206,11 @@ proc Steering(state:sVirtualCarState, ccthrState:sCCThreshold, enabled:Bool, dnr
 			(btn==Disable) ->
 				s_ccEnable(Disabled).Steering(enabled = false)
 	) <>
+	% Note that it is not required to pass on the message, since no other component is interesting in the cc Button
 	Steering()
 	
-	% Note that the ccthr only matter for enabling the CC.
+	% Note that the ccthr only matters for enabling the CC.
+	% Note that a speed message should be followed by a VCS message. So we wait for the VCS message before acting.
 	+ sum ccthr:sCCThreshold.sum onoffthr:sTurnOffThreshold.sum dir:sDirection.
 		r_Speed_Steering(ccthr, onoffthr, dir).Steering(ccthrState = ccthr)
 		
@@ -188,9 +222,9 @@ proc Steering(state:sVirtualCarState, ccthrState:sCCThreshold, enabled:Bool, dnr
 % m_name -> state variable
 % --------------------
 proc MotorForce(m_vcs:sVirtualCarState, m_dnrp:sDNRPState, m_dir:sDirection, m_gas:sPedalState, m_brake:sPedalState, m_battery:sBatteryState, m_ccstate:sCCState) = 
-	ApplyMotorForce(m_vcs, m_dnrp, m_dir, m_gas, m_brake, m_battery, m_ccstate).(
+	(
 		sum i_vcs:sVirtualCarState.	r_VCS_MF(i_vcs).								MotorForce(m_vcs = i_vcs) + 
-		sum i_ccstate:sCCState.			r_ccEnable_MF(i_ccstate).				MotorForce(m_ccstate = i_ccstate) + 
+		sum i_ccstate:sCCState.			r_ccEnable_MF(i_ccstate).ApplyMotorForce(m_vcs, m_dnrp, m_dir, m_gas, m_brake, m_battery, i_ccstate).																											MotorForce(m_ccstate = i_ccstate) + 
 		sum i_dnrp:sDNRPState.			r_DNRP_MF(i_dnrp).							MotorForce(m_dnrp = i_dnrp) + 
 		sum i_gas:sPedalState.			r_GasPedal_MF(i_gas).						MotorForce(m_gas = i_gas) + 
 		sum i_brake:sPedalState.		r_BrakePedal_MF(i_brake).				MotorForce(m_brake = i_brake) + 
@@ -264,9 +298,9 @@ init
   	aSpeed,
   	aCC,
   	% Output actions
-  	%aVCS,
+  	aVCS,
   	aMotorForce,
-		%aCCActive,
+		aCCActive,
 		% Communications
 		c_VCS,
 		c_ccEnable,

@@ -23,7 +23,12 @@ gulp.task('lps', function () {
 
 // Create lts from lps
 gulp.task('lts', function () {
-  return run('lps2lts ' + paths.fn + '.lps  ' + paths.fn + '.lts').exec();
+  return run('lps2lts ' + paths.fn + '.lps  ' + paths.fn + '.org.lts').exec();
+})
+
+// Reduce lts
+gulp.task('convert', function () {
+  return run('ltsconvert --equivalence=branching-bisim ' + paths.fn + '.org.lts  ' + paths.fn + '.lts').exec();
 })
 
 // Create pbes from all lps and modal u
@@ -43,7 +48,7 @@ gulp.task('validate', function() {
 
 // Build new lps lts and pbes
 gulp.task('build', function(cb) {
-  runSequence('lps', 'lts', 'pbes', cb);
+  runSequence('lps', 'lts', 'convert' , 'pbes', cb);
 }); 
 
 // Automatically generate lps, lts and pbes when the mcrl2 specification is updated
