@@ -5,7 +5,7 @@ var runSequence = require('run-sequence')
 
 // Required paths
 var paths = {
-  fn: 'solar_1_1_1',
+  fn: 'solar',
   mcf: {
     files: 'mcf/*.mcf',
     folder: 'mcf'
