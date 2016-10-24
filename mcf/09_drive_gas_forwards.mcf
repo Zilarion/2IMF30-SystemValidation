@@ -18,6 +18,8 @@ nu X (inD:Bool = false, bp:Bool = false, battFull:Bool = false, carOn:Bool = fal
 	[forall c:sCCThreshold.forall o:sTurnOffThreshold.
 	aSpeed(c, o, Forwards)] X(inD, bp, battFull, carOn, true) &&
 	[forall c:sCCThreshold.forall o:sTurnOffThreshold.
+	aSpeed(c, o, Static)] X(inD, bp, battFull, carOn, true) &&
+	[forall c:sCCThreshold.forall o:sTurnOffThreshold.
 	aSpeed(c, o, Backwards)] X(inD, bp, battFull, carOn, false) &&
 	
 	% CarOn Changes
@@ -29,16 +31,21 @@ nu X (inD:Bool = false, bp:Bool = false, battFull:Bool = false, carOn:Bool = fal
 	aDNRP(D) || aDNRP(R) || aDNRP(NP) ||
 	aBrakePedal(Pressed) || aBrakePedal(Released) ||
 	aBattery(Unsafe) || aBattery(Safe) || aBattery(Full) ||
-	forall c:sCCThreshold.forall o:sTurnOffThreshold.forall d:sDirection.aSpeed(c, o, d) ||
+	forall c:sCCThreshold.forall o:sTurnOffThreshold.aSpeed(c, o, Forwards) ||
+	forall c:sCCThreshold.forall o:sTurnOffThreshold.aSpeed(c, o, Backwards) ||
+	forall c:sCCThreshold.forall o:sTurnOffThreshold.aSpeed(c, o, Static) ||
 	aVCS(On) || aVCS(Off)
 	)] X(inD, bp, battFull, carOn, rightDir) && 
 
-	% Gas pedal is pressed after some finite amount of time, we should see an aMotorForce(ApplyForceForwarinD) action
-	!(val(inD) && !val(bp) && val(carOn) && ( (!val(battFull)) || val(rightDir))) ||
-	[aGasPedal(Pressed)] 
+	% Gas pedal is pressed after some finite amount of time, we should see an aMotorForce(ApplyForceForwards) action
+	% We use the fact here that the system does not need an arbitrary finite amount of steps, but will need exactly 3.
 	(
-		mu Y . (
-			[!aMotorForce(ApplyForceForwards)] Y && <true>true
-		)
+	(!(val(inD) && !val(bp) && val(carOn) && ( (!val(battFull)) || val(rightDir)))) ||
+	(
+		% 3 steps after a aGasPedal(Pressed) it is possible to do a aMotorForce(ApplyForceForwards)
+		[aGasPedal(Pressed)][true.true.true]<aMotorForce(ApplyForceForwards)> true &&
+		% 3 steps after a sGasPedal(Pressed) no other action is possible
+		[aGasPedal(Pressed)][true.true.true]<!aMotorForce(ApplyForceForwards)> false
+	)
 	)
 )
