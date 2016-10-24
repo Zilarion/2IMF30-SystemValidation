@@ -4,12 +4,21 @@
 
 % exists or forall for cp & dp?
 
-forall c:sCCThreshold . forall d:sDirection . exists cp:sCCThreshold . exists dp:sDirection .
-nu X (unsafe:Bool = false).(
-	[aBattery(Unsafe)] X(true) &&
-	[aBattery(Safe) || aBattery(Full)] X(false) &&
+nu X (unsafe:Bool = false, aboveMax:Bool = false).(
+	[aBattery(Unsafe)] X(true, aboveMax) &&
+	[aBattery(Safe) || aBattery(Full)] X(false, aboveMax) &&
+	
+	[forall c:sCCThreshold.forall d:sDirection.
+	aSpeed(c, AboveTurnOffMax, d)] X(unsafe, true) &&
+	
+	[forall c:sCCThreshold.forall d:sDirection.
+	aSpeed(c, BelowTurnOffMax, d)] X(unsafe, false) &&
+	
+	[aBattery(Unsafe) || aBattery(Full) || aBattery(Safe) || 
+	forall c:sCCThreshold.forall d:sDirection.
+	aSpeed(c, AboveTurnOffMax, d) || 
+	forall c:sCCThreshold.forall d:sDirection.
+	aSpeed(c, BelowTurnOffMax, d)] X(unsafe,aboveMax) &&
 
-	[!(exists d:sBatteryState . aBattery(d))] X(unsafe) &&
-
-	[aSpeed(c, AboveTurnOffMax, d) . (!aSpeed(cp, BelowTurnOffMax, dp))* . aVCS(Off)] (val(unsafe))
+	[aVCS(Off)] (val(unsafe) || !val(aboveMax))
 )
