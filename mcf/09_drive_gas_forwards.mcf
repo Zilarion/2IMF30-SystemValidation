@@ -1,27 +1,44 @@
 % Requirement 9
-% After a DNRP(D) action occured after which a GasPedal(Pressed) occured there should be a path in which one of MotorForce(Forwards), DNRP(R), DNRP(NP), BrakePedal(Pressed) or Battery(Unsafe) occurs in a finite amount of steps.
+% After a DNRP(D) action occured after which a GasPedal(Pressed) occured there should be a path in which one of MotorForce(ForwarinD), DNRP(R), DNRP(NP), BrakePedal(Pressed) or Battery(Unsafe) occurs in a finite amount of steps.
 
-nu X (ds:Bool = false, bp:Bool = false, bs:Bool = false).(
+nu X (inD:Bool = false, bp:Bool = false, battFull:Bool = false, carOn:Bool = false, rightDir:Bool = false).(
 	% DNRP changes
-	[aDNRP(D)] X(true, bp, bs) && 
-	[aDNRP(R) || aDNRP(NP)] X(false, bp, bs) &&
+	[aDNRP(D)] X(true, bp, battFull, carOn, rightDir) && 
+	[aDNRP(R) || aDNRP(NP)] X(false, bp, battFull, carOn, rightDir) &&
 
 	% Brake pedal changes
-	[aBrakePedal(Pressed)] X(ds, true, bs) &&
-	[aBrakePedal(Released)] X(ds, false, bs) &&
+	[aBrakePedal(Pressed)] X(inD, true, battFull, carOn, rightDir) &&
+	[aBrakePedal(Released)] X(inD, false, battFull, carOn, rightDir) &&
 
 	% Battery changes
-	[aBattery(Unsafe)] X(ds, bp, false) &&
-	[aBattery(Safe) || aBattery(Full)] X(ds, bp, true) &&
+	[aBattery(Safe) || aBattery(Unsafe)] X(inD, bp, false, carOn, rightDir) &&
+	[aBattery(Full)] X(inD, bp, true, carOn, rightDir) &&
 
-	[!(exists d:sDNRPState . aDNRP(d) || exists d:sPedalState . aBrakePedal(d) || exists d:sBatteryState . aBattery(d))] X(ds, bp, bs) && 
+	% Direction changes
+	[forall c:sCCThreshold.forall o:sTurnOffThreshold.
+	aSpeed(c, o, Forwards)] X(inD, bp, battFull, carOn, true) &&
+	[forall c:sCCThreshold.forall o:sTurnOffThreshold.
+	aSpeed(c, o, Backwards)] X(inD, bp, battFull, carOn, false) &&
+	
+	% CarOn Changes
+	[aVCS(On)] X(inD, bp, battFull, true, rightDir) &&
+	[aVCS(Off)] X(inD, bp, battFull, false, rightDir) &&
 
-	% Gas pedal is pressed after some finite amount of time, we should see an aMotorForce(ApplyForceForwards) action
+	% Other actions do not change the state of X
+	[!(
+	aDNRP(D) || aDNRP(R) || aDNRP(NP) ||
+	aBrakePedal(Pressed) || aBrakePedal(Released) ||
+	aBattery(Unsafe) || aBattery(Safe) || aBattery(Full) ||
+	forall c:sCCThreshold.forall o:sTurnOffThreshold.forall d:sDirection.aSpeed(c, o, d) ||
+	aVCS(On) || aVCS(Off)
+	)] X(inD, bp, battFull, carOn, rightDir) && 
+
+	% Gas pedal is pressed after some finite amount of time, we should see an aMotorForce(ApplyForceForwarinD) action
+	!(val(inD) && !val(bp) && val(carOn) && ( (!val(battFull)) || val(rightDir))) ||
 	[aGasPedal(Pressed)] 
 	(
-	 	val(!ds || bp || !bs) ||
 		mu Y . (
-			[!aMotorForce(ApplyForceForwards) && !aDNRP(R) && !aDNRP(NP) && !aBrakePedal(Pressed) && !aBattery(Unsafe)] Y && <true>true
+			[!aMotorForce(ApplyForceForwards)] Y && <true>true
 		)
 	)
 )
