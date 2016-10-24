@@ -14,11 +14,11 @@ nu X (unsafe:Bool = false, aboveMax:Bool = false).(
 	[forall c:sCCThreshold.forall d:sDirection.
 	aSpeed(c, BelowTurnOffMax, d)] X(unsafe, false) &&
 	
-	[aBattery(Unsafe) || aBattery(Full) || aBattery(Safe) || 
+	[!(aBattery(Unsafe) || aBattery(Full) || aBattery(Safe) || 
 	forall c:sCCThreshold.forall d:sDirection.
 	aSpeed(c, AboveTurnOffMax, d) || 
 	forall c:sCCThreshold.forall d:sDirection.
-	aSpeed(c, BelowTurnOffMax, d)] X(unsafe,aboveMax) &&
+	aSpeed(c, BelowTurnOffMax, d))] X(unsafe,aboveMax) &&
 
 	[aVCS(Off)] (val(unsafe) || !val(aboveMax))
 )
