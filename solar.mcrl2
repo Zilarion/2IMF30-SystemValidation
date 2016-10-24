@@ -92,15 +92,6 @@ sum car:sOnOffButton.aCar(car).s_Car(car) +
 sum batt:sBatteryState.aBattery(batt).s_Battery(batt) +
 sum cc:sCCButton.aCC(cc).s_CC(cc) +
 sum ccthr:sCCThreshold.sum onoffthr:sTurnOffThreshold.sum dir:sDirection.aSpeed(ccthr, onoffthr, dir).s_Speed(ccthr, onoffthr, dir)
-
-%sum gas:sPedalState.s_GasPedal(gas) +
-%sum brake:sPedalState.s_BrakePedal(brake) +
-%sum dnrp:sDNRPState.s_DNRP(dnrp) +
-%sum car:sOnOffButton.s_Car(car) +
-%sum batt:sBatteryState.s_Battery(batt) +
-%sum cc:sCCButton.s_CC(cc) +
-%sum ccthr:sCCThreshold.sum onoffthr:sTurnOffThreshold.sum dir:sDirection.s_Speed(ccthr, onoffthr, dir)
-
 ).r_InputHandled.InputHandler;
 	
 % --------------------
@@ -115,7 +106,7 @@ proc Safety(state:sVirtualCarState, battery:sBatteryState, onoffthrState:sTurnOf
 			aVCS(On).s_VCS(On).Safety(state=On)
 		<> 
 		% Turn the car off
-		(btn == SwitchOff && onoffthrState == AboveTurnOffMax) ->
+		(btn == SwitchOff && onoffthrState == BelowTurnOffMax) ->
 			aVCS(Off).s_VCS(Off).Safety(state=Off)
 		<> 
 		% We don't have to change anything
