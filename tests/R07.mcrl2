@@ -6,37 +6,35 @@ sort
 	sCCThreshold = struct BelowCCmin | AboveCCmin;
 	sTurnOffThreshold = struct BelowTurnOffMax | AboveTurnOffMax;
 	sDirection = struct Forwards | Backwards | Static;
+	sMotorForce = struct ApplyForceForwards | ApplyForceBackwards | ApplyBrake | NoForce;
 	sCCState = struct Enabled | Disabled;
 	sCCButton = struct Enable | Disable;
 	sVirtualCarState = struct On | Off;
 
-act 
-	aGasPedal : sPedalState;
-  aBrakePedal : sPedalState;
-  aDNRP : sDNRPState;
-  aCar : sOnOffButton;
-  aBattery : sBatteryState;
-  aSpeed : sCCThreshold # sTurnOffThreshold # sDirection;
-  aCC : sCCButton;
-  aMotorForce : sDirection;
-
- 	c_VCS : sVirtualCarState;
- 	c_ccEnable: sCCState;
+act
+	% Input actions from the user and environment
+  	aGasPedal : sPedalState;
+  	aBrakePedal : sPedalState;
+  	aDNRP : sDNRPState;
+  	aCar : sOnOffButton;
+  	aBattery : sBatteryState;
+  	aSpeed : sCCThreshold # sTurnOffThreshold # sDirection;
+  	aCC : sCCButton;
+  	
+  	% Output actions
+  	aVCS : sVirtualCarState;
+  	aMotorForce : sMotorForce;
+		aCCActive: sCCState;
  	
-map opposite: sDirection -> sDirection;
-eqn
-	opposite(Forwards) = Backwards;
-	opposite(Static) = Static;
-	opposite(Backwards) = Forwards;
 
 proc Test =
 	
 	% Req 07 tests
 		% should be FALSE
-		c_VCS(On).aSpeed(BelowCCmin, BelowTurnOffMax, Forwards).aBrakePedal(Pressed).aBattery(Safe).aMotorForce(Static)
+		% aVCS(On).aSpeed(BelowCCmin, BelowTurnOffMax, Forwards).aBrakePedal(Pressed).aBattery(Safe).aMotorForce(NoForce)
 
 		% should be TRUE
-		% a_VCS(On).aSpeed(BelowCCmin, BelowTurnOffMax, Forwards).aBrakePedal(Pressed).aBattery(Safe).aMotorForce(Backwards)
+		% aVCS(On).aSpeed(BelowCCmin, BelowTurnOffMax, Forwards).aBrakePedal(Pressed).aBattery(Safe).aMotorForce(ApplyBrake)
 
 ;
 
@@ -51,12 +49,9 @@ init
   	aSpeed,
   	aCC,
   	% Output actions
-  	%aVCS,
+  	aVCS,
   	aMotorForce,
-		%aCCActive,
-		% Communications
-		c_VCS,
-		c_ccEnable
+		aCCActive
 		},
 		 Test
 		);
