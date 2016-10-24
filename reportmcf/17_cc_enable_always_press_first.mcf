@@ -1,4 +1,4 @@
 % Requirement 17
 % A CCEnable(Enable) action should never occur without being preceded by a CC(Enable) action.
 
-[(!aCC(Enable))* . c_ccEnable(Enabled)]false
+[(!aCC(Enable))* . aCCActive(Enabled)]false

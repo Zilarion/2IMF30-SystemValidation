@@ -16,20 +16,12 @@ nu X (ds:Bool = false, bp:Bool = false, bs:Bool = false).(
 
 	[!(exists d:sDNRPState . aDNRP(d) || exists d:sPedalState . aBrakePedal(d) || exists d:sBatteryState . aBattery(d))] X(ds, bp, bs) && 
 
-	% Gas pedal is pressed after some finite amount of time, we should see an aMotorForce(Forwards) action
-	[aGasPedal(Pressed)] mu Y (dsL:Bool = ds, bpL:Bool = bp, bsL:Bool = bs) . (
-		% DNRP changes
-		[aDNRP(D)] Y(true, bpL, bsL) && 
-		[aDNRP(R) || aDNRP(NP)] Y(false, bpL, bsL) &&
-
-		% Brake pedal changes
-		[aBrakePedal(Pressed)] Y(dsL, true, bsL) &&
-		[aBrakePedal(Released)] Y(dsL, false, bsL) &&
-
-		% Battery changes
-		[aBattery(Unsafe)] Y(dsL, bpL, false) &&
-		[aBattery(Safe) || aBattery(Full)] Y(dsL, bpL, true) &&
-
-		([!aMotorForce(Forwards)] Y(dsL, bpL, bsL) && <true>true) && val(dsL && !bpL && bsL)
+	% Gas pedal is pressed after some finite amount of time, we should see an aMotorForce(ApplyForceForwards) action
+	[aGasPedal(Pressed)] 
+	(
+	 	val(!ds || bp || !bs) ||
+		mu Y . (
+			[!aMotorForce(ApplyForceForwards) && !aDNRP(R) && !aDNRP(NP) && !aBrakePedal(Pressed) && !aBattery(Unsafe)] Y && <true>true
+		)
 	)
 )
