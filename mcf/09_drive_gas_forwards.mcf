@@ -1,69 +1,28 @@
-% REQ 9, complies to testing scenarios!
-%nu X (inD:Bool = false).(
-%	[aDNRP(D)] X(true) &&
-%	[aDNRP(R) || aDNRP(NP)] X(false) &&
-%	[!(exists x:sDNRPState.aDNRP(x))]X(inD) &&
-%	[aGasPedal(Pressed)] mu Y (inDLoc:Bool = inD).(
-%		[aDNRP(D)] Y(true) &&
-%		[aDNRP(R) || aDNRP(NP)] Y(false) &&
-%	%	[!(exists x:sDNRPState.aDNRP(x))]Y(inDLoc) &&
-%		[!aMotorForce(ApplyForceForwarinD)]Y(inDLoc) && <true>true && val(inDLoc)
-%	)
-%)
+% Requirement 9
+% After a DNRP(D) action occured after which a GasPedal(Pressed) occured there should be a path in which one of MotorForce(Forwards), DNRP(R), DNRP(NP), BrakePedal(Pressed) or Battery(Unsafe) occurs in a finite amount of steps.
 
-% REQ 9, DIRECTION CHANGE WERKT NIET
-nu X (inD:Bool = false, braking:Bool = false, batFull:Bool = false, vcsOn:Bool = false, dir:Bool = false).(
-	
+nu X (ds:Bool = false, bp:Bool = false, bs:Bool = true, on:Bool = false).(
 	% DNRP changes
-	[aDNRP(D)] X(true, braking, batFull, vcsOn, dir) &&
-	[aDNRP(R) || aDNRP(NP)] X(false, braking, batFull, vcsOn, dir) &&
+	[aDNRP(D)] X(true, bp, bs, on) && 
+	[aDNRP(R) || aDNRP(NP)] X(false, bp, bs, on) &&
+
+	[aVCS(Off)] X(ds, bp, bs, false) &&
+	[aVCS(On)] X(ds, bp, bs, true) &&
 
 	% Brake pedal changes
-	[aBrakePedal(Pressed)] X(inD, true, batFull, vcsOn, dir) &&
-	[aBrakePedal(Released)] X(inD, false, batFull, vcsOn, dir) &&
+	[aBrakePedal(Pressed)] X(ds, true, bs, on) &&
+	[aBrakePedal(Released)] X(ds, false, bs, on) &&
 
 	% Battery changes
-	[aBattery(Safe) || aBattery(Unsafe)] X(inD, braking, false, vcsOn, dir) &&
-	[aBattery(Full)] X(inD, braking, true, vcsOn, dir) &&
+	[aBattery(Unsafe)] X(ds, bp, false, on) &&
+	[aBattery(Safe) || aBattery(Full)] X(ds, bp, true, on) &&
 
-	% VCS changes
-	[aVCS(On)] X(inD, braking, batFull, true, dir) &&
-	[aVCS(Off)] X(inD, braking, batFull, false, dir) &&
+	[!(exists d:sDNRPState . aDNRP(d) || exists d:sPedalState . aBrakePedal(d) || exists d:sBatteryState . aBattery(d) || exists d:sVirtualCarState . aVCS(d))] X(ds, bp, bs, on) && 
 
-	% Direction changes
-	% deze werken niet!
-	[forall c:sCCThreshold.forall o:sTurnOffThreshold.aSpeed(c, o, Forwards)] 	X(inD, braking, batFull, vcsOn, true) &&
-	[forall c:sCCThreshold.forall o:sTurnOffThreshold.aSpeed(c, o, Static)] 	X(inD, braking, batFull, vcsOn, true) &&
-	[forall c:sCCThreshold.forall o:sTurnOffThreshold.aSpeed(c, o, Backwards)] 	X(inD, braking, batFull, vcsOn, false) &&
-
-
-	% maybe forall c:sCCThreshold.forall o:sTurnOffThreshold.exists d:sDirection.aSpeed(c, o, d) is incorrect?
-	[!(exists x:sDNRPState.aDNRP(x) || exists y:sPedalState.aBrakePedal(y) || exists z:sBatteryState.aBattery(z) || exists j:sVirtualCarState.aVCS(j) || forall c:sCCThreshold.forall o:sTurnOffThreshold.exists d:sDirection.aSpeed(c, o, d))] X(inD, braking, batFull, vcsOn, dir) &&
-
-	[aGasPedal(Pressed)] mu Y (inDLoc:Bool = inD, brakingLoc:Bool = braking, batFullLoc:Bool = batFull, vcsOnLoc:Bool = vcsOn, dirLoc:Bool = dir).(
-		% DNRP changes
-		[aDNRP(D)] Y(true, brakingLoc, batFullLoc, vcsOnLoc, dirLoc) &&
-		[aDNRP(R) || aDNRP(NP)] Y(false, brakingLoc, batFullLoc, vcsOnLoc, dirLoc) &&
-
-		% Brake pedal changes
-		[aBrakePedal(Pressed)] Y(inDLoc, true, batFullLoc, vcsOnLoc, dirLoc) &&
-		[aBrakePedal(Released)] Y(inDLoc, false, batFullLoc, vcsOnLoc, dirLoc) &&
-
-		% Battery changes
-		[aBattery(Safe) || aBattery(Unsafe)] Y(inDLoc, brakingLoc, false, vcsOnLoc, dirLoc) &&
-		[aBattery(Full)] Y(inDLoc, brakingLoc, true, vcsOnLoc, dirLoc) &&
-
-		% VCS changes
-		[aVCS(On)] Y(inDLoc, brakingLoc, batFullLoc, true, dirLoc) &&
-		[aVCS(Off)] Y(inDLoc, brakingLoc, batFullLoc, false, dirLoc)  &&
-
-		% Direction changes
-		% deze werken niet!
-		[forall c:sCCThreshold.forall o:sTurnOffThreshold.aSpeed(c, o, Forwards)] Y(inDLoc, brakingLoc, batFullLoc, vcsOnLoc, true) &&
-		[forall c:sCCThreshold.forall o:sTurnOffThreshold.aSpeed(c, o, Static)] Y(inDLoc, brakingLoc, batFullLoc, vcsOnLoc, true) &&
-		[forall c:sCCThreshold.forall o:sTurnOffThreshold.aSpeed(c, o, Backwards)] Y(inDLoc, brakingLoc, batFullLoc, vcsOnLoc, false) &&
-
-		% [!aMotorForce(ApplyForceForwards)]Y(inDLoc,brakingLoc,batFullLoc, vcsOnLoc) && <true>true && val(inDLoc && !brakingLoc && batFullLoc)
-		[!aMotorForce(ApplyForceForwards)]Y(inDLoc,brakingLoc,batFullLoc, vcsOnLoc, dirLoc) && <true>true && val(inDLoc && !brakingLoc && vcsOnLoc && (dirLoc || !batFullLoc)) 
+	% Gas pedal is pressed after some finite amount of time, we should see an aMotorForce(ApplyForceForwards) action
+	(val(ds && !bp && bs && on) => [aGasPedal(Pressed)] 
+		mu Y . (
+			[!aMotorForce(ApplyForceForwards) && !aDNRP(R) && ! aDNRP(NP) && !aBrakePedal(Pressed) && !aBattery(Unsafe) && !aVCS(Off)] Y && <true>true
+		)
 	)
 )
