@@ -1,24 +1,23 @@
 % Requirement 02
-% Between a Speed(*, AboveTurnOffMax, *) and a Speed(*, BelowTurnOffMax, *) no VCS(Off) should occur, unless the last seen Battery action was Battery(Unsafe).
+% Between a aSpeed(c, AboveTurnOffMax, d) and a aSpeed(c', BelowTurnOffMax, d') no aVCS(Off) should occur, unless the last seen Battery action was Battery(Unsafe).
 
 
-% exists or forall for cp & dp?
+nu X (safe:Bool = true, on:Bool = false).(
+	[aBattery(Unsafe)] X(false, on) &&
+	[aBattery(Safe) || aBattery(Full)] X(true, on) &&
 
-nu X (unsafe:Bool = false, aboveMax:Bool = false).(
-	[aBattery(Unsafe)] X(true, aboveMax) &&
-	[aBattery(Safe) || aBattery(Full)] X(false, aboveMax) &&
+	[aVCS(Off)] X(safe, false) &&
+	[aVCS(On)] X(safe, true) &&
+
+	[!(exists d:sBatteryState . aBattery(d) || exists d:sVirtualCarState . aVCS(d))] X(safe, on) &&
 	
-	[forall c:sCCThreshold.forall d:sDirection.
-	aSpeed(c, AboveTurnOffMax, d)] X(unsafe, true) &&
-	
-	[forall c:sCCThreshold.forall d:sDirection.
-	aSpeed(c, BelowTurnOffMax, d)] X(unsafe, false) &&
-	
-	[!(aBattery(Unsafe) || aBattery(Full) || aBattery(Safe) || 
-	forall c:sCCThreshold.forall d:sDirection.
-	aSpeed(c, AboveTurnOffMax, d) || 
-	forall c:sCCThreshold.forall d:sDirection.
-	aSpeed(c, BelowTurnOffMax, d))] X(unsafe,aboveMax) &&
-
-	[aVCS(Off)] (val(unsafe) || !val(aboveMax))
+	(
+		val(safe && on) => (
+			forall c:sCCThreshold . forall d:sDirection.[
+				aSpeed(c, AboveTurnOffMax, d) . 
+				(!(exists cp:sCCThreshold . exists dp:sDirection . aSpeed(cp, BelowTurnOffMax, dp) || aBattery(Unsafe)))* . 
+				aVCS(Off)
+			] false
+		)	
+	)
 )
