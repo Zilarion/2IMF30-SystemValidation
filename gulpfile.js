@@ -28,7 +28,7 @@ gulp.task('lts', function () {
 
 // Reduce lts
 gulp.task('convert', function () {
-  return run('ltsconvert --equivalence=branching-bisim ' + paths.fn + '.org.lts  ' + paths.fn + '.lts').exec();
+  return run('ltsconvert --equivalence=dpbranching-bisim ' + paths.fn + '.org.lts  ' + paths.fn + '.lts').exec();
 })
 
 // Create pbes from all lps and modal u
