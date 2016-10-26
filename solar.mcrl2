@@ -241,9 +241,6 @@ proc ApplyMotorForce(m_vcs:sVirtualCarState, m_dnrp:sDNRPState, m_dir:sDirection
 			<>
 				aMotorForce(ApplyBrake)
 		<> (m_gas == Pressed) -> % only gas is pressed
-			(m_battery == Full && m_dir == Backwards) ->
-				aMotorForce(NoForce)
-			<>
 				aMotorForce(ApplyForceForwards)
 		<> %Neither gas not brake is pressed
 			aMotorForce(NoForce)
@@ -254,9 +251,6 @@ proc ApplyMotorForce(m_vcs:sVirtualCarState, m_dnrp:sDNRPState, m_dir:sDirection
 			<>
 				aMotorForce(ApplyBrake)
 		<> (m_gas == Pressed) -> % only gas is pressed
-			(m_battery == Full && m_dir == Forwards) ->
-				aMotorForce(NoForce)
-			<>
 				aMotorForce(ApplyForceBackwards)
 		<> %Neither gas not brake is pressed
 			aMotorForce(NoForce)
