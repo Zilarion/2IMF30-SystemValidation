@@ -1,5 +1,5 @@
 % Requirement 15
-% After a aCC(set) an aCCActive(Enabled) action should be seen unless ...
+% After a aCC(Enable) an aCCActive(Enabled) action should be seen unless ...
 
 nu X (ds:Bool = false, bp:Bool = false, ccok:Bool = false, on:Bool = false, bs:Bool = true).(
 	% DNRP changes
@@ -23,13 +23,14 @@ nu X (ds:Bool = false, bp:Bool = false, ccok:Bool = false, on:Bool = false, bs:B
 	[!(exists d:sDNRPState . aDNRP(d) || exists d:sPedalState . aBrakePedal(d) || exists d:sBatteryState . aBattery(d) ||  exists d0:sCCThreshold . exists d1:sTurnOffThreshold . exists d2:sDirection . aSpeed(d0, d1, d2) || exists d:sVirtualCarState . aVCS(d))] X(ds, bp, ccok, on, bs) && 
 
 	% Gas pedal is pressed after some finite amount of time, we should see an aMotorForce(ApplyForceForwards) action
-	(val(ds && !bp && ccok && on) => [aCC(Enable)] 
+	(val(ds && !bp && ccok && on && bs) => [aCC(Enable)] 
 		mu Y . (
 			[!aCCActive(Enabled) && 
+			!aCC(Disable) &&
 			!aDNRP(R) && !aDNRP(NP) && 
 			!aBrakePedal(Pressed) && 
 			!aBattery(Unsafe) &&
-			!(exists d1:sTurnOffThreshold . exists d2:sDirection. aSpeed(BelowCCmin, d1, d2)) && 
+			forall d1:sTurnOffThreshold . forall d2:sDirection . !aSpeed(BelowCCmin, d1, d2) && 
 			!aVCS(Off)] Y && <true>true
 		)
 	)
