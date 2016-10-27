@@ -1,7 +1,3 @@
-% Requirement 7
-% The motors should brake if brake is being pressed as long as the battery is not full and the car is on
-
-
 nu X (vcs:Bool = false, bat:Bool = false). (
 	[aVCS(On)] X(true, bat) &&
 	[aVCS(Off)] X(false, bat) &&

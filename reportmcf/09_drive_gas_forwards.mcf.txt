@@ -1,0 +1,21 @@
+nu X (ds:Bool = false, bp:Bool = false, bs:Bool = true, on:Bool = false).(
+	[aDNRP(D)] X(true, bp, bs, on) && 
+	[aDNRP(R) || aDNRP(NP)] X(false, bp, bs, on) &&
+
+	[aVCS(Off)] X(ds, bp, bs, false) &&
+	[aVCS(On)] X(ds, bp, bs, true) &&
+
+	[aBrakePedal(Pressed)] X(ds, true, bs, on) &&
+	[aBrakePedal(Released)] X(ds, false, bs, on) &&
+
+	[aBattery(Unsafe)] X(ds, bp, false, on) &&
+	[aBattery(Safe) || aBattery(Full)] X(ds, bp, true, on) &&
+
+	[!(exists d:sDNRPState . aDNRP(d) || exists d:sPedalState . aBrakePedal(d) || exists d:sBatteryState . aBattery(d) || exists d:sVirtualCarState . aVCS(d))] X(ds, bp, bs, on) && 
+
+	(val(ds && !bp && bs && on) => [aGasPedal(Pressed)] 
+		mu Y . (
+			[!aMotorForce(ApplyForceForwards) && !aDNRP(R) && ! aDNRP(NP) && !aBrakePedal(Pressed) && !aBattery(Unsafe) && !aVCS(Off)] Y && <true>true
+		)
+	)
+)

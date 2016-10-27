@@ -1,0 +1,19 @@
+nu X (safe:Bool = true, on:Bool = false).(
+	[aBattery(Unsafe)] X(false, on) &&
+	[aBattery(Safe) || aBattery(Full)] X(true, on) &&
+
+	[aVCS(Off)] X(safe, false) &&
+	[aVCS(On)] X(safe, true) &&
+
+	[!(exists d:sBatteryState . aBattery(d) || exists d:sVirtualCarState . aVCS(d))] X(safe, on) &&
+	
+	(
+		val(safe && on) => (
+			forall c:sCCThreshold . forall d:sDirection.[
+				aSpeed(c, AboveTurnOffMax, d) . 
+				(!(exists cp:sCCThreshold . exists dp:sDirection . aSpeed(cp, BelowTurnOffMax, dp) || aBattery(Unsafe)))* . 
+				aVCS(Off)
+			] false
+		)	
+	)
+)
