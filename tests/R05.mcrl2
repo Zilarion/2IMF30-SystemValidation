@@ -1,0 +1,62 @@
+sort 
+	sPedalState = struct Pressed | Released;
+	sDNRPState = struct D | R | NP;
+	sOnOffButton = struct SwitchOn | SwitchOff;
+	sBatteryState = struct Unsafe | Safe | Full;
+	sCCThreshold = struct BelowCCmin | AboveCCmin;
+	sTurnOffThreshold = struct BelowTurnOffMax | AboveTurnOffMax;
+	sDirection = struct Forwards | Backwards | Static;
+	sCCState = struct Enabled | Disabled;
+	sCCButton = struct Enable | Disable;
+	sVirtualCarState = struct On | Off;
+
+act 
+	aGasPedal : sPedalState;
+  aBrakePedal : sPedalState;
+  aDNRP : sDNRPState;
+  aCar : sOnOffButton;
+  aBattery : sBatteryState;
+  aSpeed : sCCThreshold # sTurnOffThreshold # sDirection;
+  aCC : sCCButton;
+  aMotorForce : sDirection;
+
+ 	c_VCS : sVirtualCarState;
+ 	c_ccEnable: sCCState;
+
+
+proc Test =
+	
+	% Req 05 tests
+		% should be FALSE
+		% c_ccEnable(Enabled).aMotorForce(Forwards).aMotorForce(Backwards)
+
+		% Should be FALSE
+		% c_ccEnable(Enabled).aMotorForce(Backwards)
+
+		% should be TRUE
+		% c_ccEnable(Enabled).aMotorForce(Forwards).aGasPedal(Pressed).c_ccEnable(Disabled).aMotorForce(Backwards)
+
+		% should be TRUE
+		% aMotorForce(Forwards).c_ccEnable(Enabled).aGasPedal(Pressed).c_ccEnable(Disabled).aMotorForce(Backwards)
+;
+
+init
+	allow({
+  	%Input actions 
+  	aGasPedal,
+  	aBrakePedal,
+  	aDNRP,
+  	aCar,
+  	aBattery,
+  	aSpeed,
+  	aCC,
+  	% Output actions
+  	%aVCS,
+  	aMotorForce,
+		%aCCActive,
+		% Communications
+		c_VCS,
+		c_ccEnable
+		},
+		 Test
+		);

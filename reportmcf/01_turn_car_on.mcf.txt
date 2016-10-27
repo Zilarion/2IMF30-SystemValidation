@@ -1,0 +1,13 @@
+nu X (unsafe:Bool = false).(
+	[aBattery(Unsafe)] X(true) &&
+	[aBattery(Safe) || aBattery(Full)] X(false) &&
+
+	[!(exists d:sBatteryState . aBattery(d))] X(unsafe) &&
+
+	[aCar(SwitchOn)] (
+		val(unsafe) || 
+		mu Y . (
+			[!aVCS(On) && !aCar(SwitchOff)] Y && <true>true
+		)
+	)
+)

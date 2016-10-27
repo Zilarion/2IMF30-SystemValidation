@@ -1,0 +1,66 @@
+sort 
+	sPedalState = struct Pressed | Released;
+	sDNRPState = struct D | R | NP;
+	sOnOffButton = struct SwitchOn | SwitchOff;
+	sBatteryState = struct Unsafe | Safe | Full;
+	sCCThreshold = struct BelowCCmin | AboveCCmin;
+	sTurnOffThreshold = struct BelowTurnOffMax | AboveTurnOffMax;
+	sDirection = struct Forwards | Backwards | Static;
+	sCCState = struct Enabled | Disabled;
+	sCCButton = struct Enable | Disable;
+	sVirtualCarState = struct On | Off;
+
+act 
+	aGasPedal : sPedalState;
+  aBrakePedal : sPedalState;
+  aDNRP : sDNRPState;
+  aCar : sOnOffButton;
+  aBattery : sBatteryState;
+  aSpeed : sCCThreshold # sTurnOffThreshold # sDirection;
+  aCC : sCCButton;
+  aMotorForce : sDirection;
+
+ 	aVCS : sVirtualCarState;
+ 	aCCActive: sCCState;
+
+
+proc Test =
+	
+	% Req 02 tests
+		% should be FALSE
+		% aSpeed(BelowCCmin, BelowTurnOffMax, Static).aGasPedal(Pressed).aVCS(On).aSpeed(BelowCCmin, AboveTurnOffMax, Static).aVCS(Off).aSpeed(BelowCCmin, BelowTurnOffMax, Static)
+
+		% Should be FALSE
+		% aSpeed(BelowCCmin, BelowTurnOffMax, Static).aGasPedal(Pressed).aVCS(Off).aVCS(On).aSpeed(BelowCCmin, AboveTurnOffMax, Backwards).aVCS(Off).aSpeed(BelowCCmin, BelowTurnOffMax, Static)
+
+		% Should be FALSE
+		% aBattery(Safe).aSpeed(BelowCCmin, BelowTurnOffMax, Static).aGasPedal(Pressed).aVCS(Off).aVCS(On).aSpeed(BelowCCmin, AboveTurnOffMax, Backwards).aVCS(Off).aSpeed(BelowCCmin, BelowTurnOffMax, Static)
+
+		% Should be TRUE
+		% aBattery(Unsafe).aSpeed(BelowCCmin, BelowTurnOffMax, Static).aGasPedal(Pressed).aVCS(Off).aVCS(On).aSpeed(BelowCCmin, AboveTurnOffMax, Backwards).aVCS(Off).aSpeed(BelowCCmin, BelowTurnOffMax, Static)
+
+		% should be TRUE
+		% aSpeed(BelowCCmin, BelowTurnOffMax, Static).aGasPedal(Pressed).aVCS(Off).aVCS(On).aSpeed(BelowCCmin, AboveTurnOffMax, Backwards).aSpeed(BelowCCmin, BelowTurnOffMax, Static).aVCS(Off)
+ 
+		% should be TRUE
+		% aVCS(On).aVCS(Off).aVCS(On).aSpeed(BelowCCmin, BelowTurnOffMax, Static).aGasPedal(Pressed).aVCS(Off).aSpeed(BelowCCmin, AboveTurnOffMax, Backwards).aSpeed(BelowCCmin, BelowTurnOffMax, Static)
+;
+
+
+init
+	allow({
+  	%Input actions 
+  	aGasPedal,
+  	aBrakePedal,
+  	aDNRP,
+  	aCar,
+  	aBattery,
+  	aSpeed,
+  	aCC,
+  	% Output actions
+  	aVCS,
+  	aMotorForce,
+		aCCActive
+		},
+		 Test
+		);

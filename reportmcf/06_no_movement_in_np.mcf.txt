@@ -1,0 +1,4 @@
+([true* . aDNRP(NP)] mu Y . (
+	[!aMotorForce(NoForce)]Y && <true>true
+)) &&
+[true* . aDNRP(NP) . (!(aDNRP(D) || aDNRP(R)))* . (aMotorForce(ApplyForceBackwards) || aMotorForce(ApplyForceForwards))] false

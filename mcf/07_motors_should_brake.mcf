@@ -1,0 +1,24 @@
+% Requirement 7
+% The motors should brake if brake is being pressed as long as the battery is not full and the car is on
+
+
+nu X (vcs:Bool = false, bat:Bool = false). (
+	[aVCS(On)] X(true, bat) &&
+	[aVCS(Off)] X(false, bat) &&
+
+	[aBattery(Full)] X(vcs, false) &&
+	[aBattery(Safe) || aBattery(Unsafe)] X(vcs, true) &&
+
+	[!(
+	exists dvcs: sVirtualCarState . aVCS(dvcs) ||
+	exists dbat:sBatteryState . aBattery(dbat)
+	)] X(vcs, bat) && 
+
+	[aBrakePedal(Pressed)]
+	(
+		val(vcs && bat) ||
+		nu Y.(
+			[!aMotorForce(ApplyBrake)]Y && <true>true
+		)
+	)
+)

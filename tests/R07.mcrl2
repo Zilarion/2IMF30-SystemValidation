@@ -1,0 +1,57 @@
+sort 
+	sPedalState = struct Pressed | Released;
+	sDNRPState = struct D | R | NP;
+	sOnOffButton = struct SwitchOn | SwitchOff;
+	sBatteryState = struct Unsafe | Safe | Full;
+	sCCThreshold = struct BelowCCmin | AboveCCmin;
+	sTurnOffThreshold = struct BelowTurnOffMax | AboveTurnOffMax;
+	sDirection = struct Forwards | Backwards | Static;
+	sMotorForce = struct ApplyForceForwards | ApplyForceBackwards | ApplyBrake | NoForce;
+	sCCState = struct Enabled | Disabled;
+	sCCButton = struct Enable | Disable;
+	sVirtualCarState = struct On | Off;
+
+act
+	% Input actions from the user and environment
+  	aGasPedal : sPedalState;
+  	aBrakePedal : sPedalState;
+  	aDNRP : sDNRPState;
+  	aCar : sOnOffButton;
+  	aBattery : sBatteryState;
+  	aSpeed : sCCThreshold # sTurnOffThreshold # sDirection;
+  	aCC : sCCButton;
+  	
+  	% Output actions
+  	aVCS : sVirtualCarState;
+  	aMotorForce : sMotorForce;
+		aCCActive: sCCState;
+ 	
+
+proc Test =
+	
+	% Req 07 tests
+		% should be FALSE
+		% aVCS(On).aSpeed(BelowCCmin, BelowTurnOffMax, Forwards).aBrakePedal(Pressed).aBattery(Safe).aMotorForce(NoForce)
+
+		% should be TRUE
+		% aVCS(On).aSpeed(BelowCCmin, BelowTurnOffMax, Forwards).aBrakePedal(Pressed).aBattery(Safe).aMotorForce(ApplyBrake)
+
+;
+
+init
+	allow({
+  	%Input actions 
+  	aGasPedal,
+  	aBrakePedal,
+  	aDNRP,
+  	aCar,
+  	aBattery,
+  	aSpeed,
+  	aCC,
+  	% Output actions
+  	aVCS,
+  	aMotorForce,
+		aCCActive
+		},
+		 Test
+		);

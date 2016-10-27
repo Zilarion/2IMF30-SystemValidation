@@ -1,0 +1,12 @@
+nu X (lastWasOff:Bool = false).(
+	[aVCS(Off)] X(true) &&
+	[aVCS(On)] X(false) &&
+
+	[!(aVCS(Off) || aVCS(On))] X(lastWasOff) &&
+
+	[aBattery(Unsafe)]
+	(
+		val(lastWasOff) || 
+		mu Y.( [!aVCS(Off)] Y && <true>true )
+	)
+)

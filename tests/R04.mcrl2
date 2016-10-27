@@ -1,0 +1,64 @@
+sort 
+	sPedalState = struct Pressed | Released;
+	sDNRPState = struct D | R | NP;
+	sOnOffButton = struct SwitchOn | SwitchOff;
+	sBatteryState = struct Unsafe | Safe | Full;
+	sCCThreshold = struct BelowCCmin | AboveCCmin;
+	sTurnOffThreshold = struct BelowTurnOffMax | AboveTurnOffMax;
+	sDirection = struct Forwards | Backwards | Static;
+	sCCState = struct Enabled | Disabled;
+	sCCButton = struct Enable | Disable;
+	sVirtualCarState = struct On | Off;
+
+act 
+	aGasPedal : sPedalState;
+  aBrakePedal : sPedalState;
+  aDNRP : sDNRPState;
+  aCar : sOnOffButton;
+  aBattery : sBatteryState;
+  aSpeed : sCCThreshold # sTurnOffThreshold # sDirection;
+  aCC : sCCButton;
+  aMotorForce : sDirection;
+
+ 	c_VCS : sVirtualCarState;
+ 	c_ccEnable: sCCState;
+
+proc Test =
+	
+	% Req 04 tests
+		% should be FALSE (forward motor force after unsafe)
+		% aBattery(Unsafe).aMotorForce(Forwards)
+
+		% Should be FALSE (no static motor force)
+		% aBattery(Unsafe).aGasPedal(Pressed)
+
+		% should be FALSE
+		% aBattery(Unsafe).aGasPedal(Pressed).aMotorForce(Forwards).aBattery(Full)
+
+		% should be TRUE
+		% aBattery(Unsafe).aMotorForce(Static).aBattery(Safe).aGasPedal(Pressed).aMotorForce(Forwards)
+ 
+		% should be TRUE
+		% aBattery(Unsafe).aBattery(Unsafe).aMotorForce(Static).aBattery(Safe).aGasPedal(Pressed).aMotorForce(Forwards)
+;
+
+init
+	allow({
+  	%Input actions 
+  	aGasPedal,
+  	aBrakePedal,
+  	aDNRP,
+  	aCar,
+  	aBattery,
+  	aSpeed,
+  	aCC,
+  	% Output actions
+  	%aVCS,
+  	aMotorForce,
+		%aCCActive,
+		% Communications
+		c_VCS,
+		c_ccEnable
+		},
+		 Test
+		);

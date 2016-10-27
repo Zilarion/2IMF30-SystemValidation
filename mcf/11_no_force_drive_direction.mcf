@@ -1,0 +1,4 @@
+% Requirement 11
+% The motor should never apply a force forwards or force backwards when the brake pedal is pressed.
+
+[true* . aBrakePedal(Pressed) . (!aBrakePedal(Released))* . (aMotorForce(ApplyForceForwards) || aMotorForce(ApplyForceBackwards))] false

@@ -1,0 +1,62 @@
+sort 
+	sPedalState = struct Pressed | Released;
+	sDNRPState = struct D | R | NP;
+	sOnOffButton = struct SwitchOn | SwitchOff;
+	sBatteryState = struct Unsafe | Safe | Full;
+	sCCThreshold = struct BelowCCmin | AboveCCmin;
+	sTurnOffThreshold = struct BelowTurnOffMax | AboveTurnOffMax;
+	sDirection = struct Forwards | Backwards | Static;
+	sCCState = struct Enabled | Disabled;
+	sCCButton = struct Enable | Disable;
+	sVirtualCarState = struct On | Off;
+
+act 
+	aGasPedal : sPedalState;
+  aBrakePedal : sPedalState;
+  aDNRP : sDNRPState;
+  aCar : sOnOffButton;
+  aBattery : sBatteryState;
+  aSpeed : sCCThreshold # sTurnOffThreshold # sDirection;
+  aCC : sCCButton;
+  aMotorForce : sDirection;
+
+ 	aVCS : sVirtualCarState;
+ 	aCCActive: sCCState;
+
+
+proc Test =
+	
+	% Req 14 tests
+		% should be FALSE
+		% aSpeed(BelowCCmin, BelowTurnOffMax, Static).aCCActive(Enabled)
+
+		% should be FALSE
+		% aSpeed(AboveCCmin, BelowTurnOffMax, Static).aSpeed(BelowCCmin, BelowTurnOffMax, Static).aCCActive(Enabled)
+
+		% should be TRUE
+		% aSpeed(AboveCCmin, BelowTurnOffMax, Static).aCCActive(Enabled)
+
+		% should be TRUE
+		% aSpeed(AboveCCmin, BelowTurnOffMax, Static).aGasPedal(Pressed).aCCActive(Enabled)
+
+		% should be TRUE
+		% aSpeed(AboveCCmin, BelowTurnOffMax, Static).aCCActive(Disabled)
+;
+
+init
+	allow({
+  	%Input actions 
+  	aGasPedal,
+  	aBrakePedal,
+  	aDNRP,
+  	aCar,
+  	aBattery,
+  	aSpeed,
+  	aCC,
+  	% Output actions
+  	aVCS,
+  	aMotorForce,
+		aCCActive
+		},
+		 Test
+		);

@@ -1,0 +1,11 @@
+nu X (ccDisabled:Bool = true) . (
+	[aCCActive(Enabled)] X(false) &&
+	[aCCActive(Disabled)] X(true) &&
+
+	[!(aCCActive(Disabled) || aCCActive(Enabled))] X(ccDisabled) &&
+
+	[aCC(Disable) || aGasPedal(Pressed) || aBrakePedal(Pressed)](
+		val(ccDisabled) ||
+		mu Y . ( [!aCCActive(Disabled)] Y && <true>true )
+	)
+)

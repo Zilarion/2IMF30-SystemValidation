@@ -1,0 +1,4 @@
+[true* . aVCS(Off)] mu Y . (
+	[!aMotorForce(NoForce)]Y && <true>true
+) &&
+[true* . aVCS(Off) . (!aVCS(On))* . (aMotorForce(ApplyForceBackwards) || aMotorForce(ApplyForceForwards))] false

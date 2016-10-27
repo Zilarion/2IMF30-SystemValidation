@@ -1,0 +1,177 @@
+% --------------------
+% Sort declarations
+% --------------------
+sort 
+	sPedalState = struct Pressed | Released;
+	sDNRPState = struct D | R | NP;
+	sOnOffButton = struct SwitchOn | SwitchOff;
+	sBatteryState = struct Unsafe | Safe | Full;
+	sCCThreshold = struct BelowCCmin | AboveCCmin;
+	sTurnOffThreshold = struct BelowTurnOffMax | AboveTurnOffMax;
+	sDirection = struct Forwards | Backwards | Static;
+	sMotorForce = struct ApplyForceForwards | ApplyForceBackwards | ApplyBrake | NoForce;
+	sCCState = struct Enabled | Disabled;
+	sCCButton = struct Enable | Disable;
+	sVirtualCarState = struct On | Off;
+	sRandom = struct A | B;
+
+	
+map opposite: sDirection -> sDirection;
+eqn
+	opposite(Forwards) = Backwards;
+	opposite(Static) = Static;
+	opposite(Backwards) = Forwards;
+
+% --------------------
+% Action declarations
+% --------------------
+act
+	% Input actions from the user and environment
+  	aGasPedal : sPedalState;
+  	aBrakePedal : sPedalState;
+  	aDNRP : sDNRPState;
+  	aCar : sOnOffButton;
+  	aBattery : sBatteryState;
+  	aSpeed : sCCThreshold # sTurnOffThreshold # sDirection;
+  	aCC : sCCButton;
+  	
+  	% Output actions
+  	aVCS : sVirtualCarState;
+  	aMotorForce : sMotorForce;
+	aCCActive: sCCState;
+
+	%test action
+	aRandom : sRandom;
+  	
+% --------------------
+% Communication definitions
+% --------------------
+
+  % All input actions are serialized via an InputHandler process
+  % This serialization ensures that all parallel components
+  % process the actions in the same order. Below are the
+  % communication action definitions.
+  	
+  	c_GasPedal : sPedalState;
+  	c_BrakePedal : sPedalState;
+  	c_DNRP : sDNRPState;
+  	c_Car : sOnOffButton;
+  	c_Battery : sBatteryState;
+  	c_Speed : sCCThreshold # sTurnOffThreshold # sDirection;
+  	c_CC : sCCButton;
+  	
+  	s_GasPedal : sPedalState;
+  	s_BrakePedal : sPedalState;
+  	s_DNRP : sDNRPState;
+  	s_Car : sOnOffButton;
+  	s_Battery : sBatteryState;
+  	s_Speed : sCCThreshold # sTurnOffThreshold # sDirection;
+  	s_CC : sCCButton;
+  	
+  	r_GasPedal_MF, r_GasPedal_Steering : sPedalState;
+  	r_BrakePedal_MF, r_BrakePedal_Steering : sPedalState;
+  	r_DNRP_MF, r_DNRP_Steering : sDNRPState;
+  	r_Car_Safety : sOnOffButton;
+  	r_Battery_Safety : sBatteryState;
+  	r_Battery_MF : sBatteryState;
+  	r_Speed_MF, r_Speed_Safety, r_Speed_Steering : sCCThreshold # sTurnOffThreshold # sDirection;
+  	r_CC_Steering : sCCButton;
+
+		% Inter process communications
+		act s_VCS, r_VCS_steer, r_VCS_MF, c_VCS : sVirtualCarState;
+		act s_ccEnable, r_ccEnable_MF, c_ccEnable: sCCState;
+		act r_InputHandled, s_MF_Done, s_Steering_Done, s_Safety_Done, c_InputHandled;
+
+
+proc Safety(state:sVirtualCarState) = 
+	
+	% REQ 1 TEST CASES
+		% short sequence
+		% should be TRUE
+		% aBattery(Safe).aCar(SwitchOn).aVCS(On).s_VCS(On).Safety(On)
+
+		% short sequence, aBattery is UNSAFE!
+		% should be FALSE
+		% aBattery(Unsafe).aCar(SwitchOn).aVCS(On).s_VCS(On).Safety(On)
+
+		% short sequence, aCar(SwitchOff) before aVCS(On)
+		% should be FALSE
+		% aBattery(Safe).aCar(SwitchOn).aCar(SwitchOff).aVCS(On).s_VCS(On).Safety(On)
+
+	% REQ 9 TEST CASES
+		% short sequence
+		% should be TRUE
+		% aBrakePedal(Released).aBattery(Safe).aDNRP(D).aVCS(On).s_VCS(On).aGasPedal(Pressed).aMotorForce(ApplyForceForwards).Safety(On)
+
+		% short sequence BP pressed!
+		% should be FALSE
+		% aBrakePedal(Pressed).aBattery(Safe).aDNRP(D).aVCS(On).s_VCS(On).aGasPedal(Pressed).aMotorForce(ApplyForceForwards).Safety(On)
+
+		% short sequence battery is full!
+		% should be FALSE
+		% aBrakePedal(Released).aBattery(Full).aDNRP(D).aVCS(On).s_VCS(On).aGasPedal(Pressed).aMotorForce(ApplyForceForwards).Safety(On)
+
+		% random sequence without toggling DNRP/BatteryState/BrakePedal
+		% should be TRUE
+		% aBrakePedal(Released).aRandom(B).aBattery(Safe).aRandom(A).aDNRP(D).aRandom(A).aRandom(B).aVCS(On).s_VCS(On).aGasPedal(Pressed).aRandom(A).aRandom(B).aMotorForce(ApplyForceForwards).Safety(On)
+
+		% random sequence where you shift from D to R back to D followed by GasPedal
+		% should be TRUE
+		% aBrakePedal(Released).aBattery(Safe).aDNRP(D).aDNRP(R).aDNRP(D).aRandom(A).aRandom(B).aVCS(On).s_VCS(On).aGasPedal(Pressed).aRandom(A).aRandom(B).aMotorForce(ApplyForceForwards).Safety(On)
+
+		% random sequence where you shift from D to R back to D after GasPedal and before MotorForce
+		% should be FALSE? Undesired behaviour if it were true?
+		% aBrakePedal(Released).aBattery(Safe).aDNRP(D).aRandom(A).aRandom(B).aVCS(On).s_VCS(On).aGasPedal(Pressed).aDNRP(R).aDNRP(D).aRandom(A).aRandom(B).aMotorForce(ApplyForceForwards).Safety(On)
+
+		% random sequence with aDNRP(R) before aGasPedal(Pressed)
+		% should be FALSE
+		% aBrakePedal(Released).aBattery(Safe).aDNRP(D).aRandom(A).aRandom(B).aDNRP(R).aVCS(On).s_VCS(On).aGasPedal(Pressed).aRandom(A).aRandom(B).aMotorForce(ApplyForceForwards).Safety(On)
+
+		% random sequence with aBattery(Full) before aGasPedal(Pressed)
+		% should be FALSE
+		% aBrakePedal(Released).aBattery(Safe).aDNRP(D).aRandom(A).aRandom(B).aBattery(Full).aVCS(On).s_VCS(On).aGasPedal(Pressed).aRandom(A).aRandom(B).aMotorForce(ApplyForceForwards).Safety(On)
+
+		% random sequence with aDNRP(NP) between aGasPedal(Pressed) and aMotorForce(ApplyForceForwards)
+		% should be FALSE
+		% aBrakePedal(Released).aBattery(Safe).aDNRP(D).aRandom(A).aRandom(B).aVCS(On).s_VCS(On).aGasPedal(Pressed).aRandom(A).aDNRP(NP).aRandom(B).aMotorForce(ApplyForceForwards).Safety(On)
+
+		% Battery is full and direction is backwards
+		% should be FALSE
+		% aBrakePedal(Released).aBattery(Full).aSpeed(AboveCCmin,BelowTurnOffMax,Backwards).aDNRP(D).aVCS(On).s_VCS(On).aGasPedal(Pressed).aMotorForce(ApplyForceForwards).Safety(On)
+
+		% Battery is safe and direction is backwards
+		% should be TRUE (this is probably not desired!)
+		aBrakePedal(Released).aBattery(Full).aSpeed(AboveCCmin,BelowTurnOffMax,Forwards).aDNRP(D).aVCS(On).s_VCS(On).aGasPedal(Pressed).aMotorForce(ApplyForceForwards).Safety(On)
+		;
+
+
+
+proc Test(state:sVirtualCarState) = 
+	% REQ 1 TEST
+		 sum test:sVirtualCarState.r_VCS_steer(test).Test(test);
+		 
+% --------------------
+% Process definition
+% --------------------
+
+
+init
+	allow({ 
+		aGasPedal, aBrakePedal, aDNRP, aCar, aBattery, aSpeed, aCC, aVCS, aMotorForce, aCCActive,
+		c_VCS, c_ccEnable, c_Battery, c_GasPedal, c_BrakePedal, c_DNRP, c_Car, c_Speed, c_CC, c_InputHandled,
+		aRandom
+	},
+	comm({ 
+		s_VCS | r_VCS_steer -> c_VCS,
+		s_ccEnable | r_ccEnable_MF -> c_ccEnable,
+		s_GasPedal | r_GasPedal_MF | r_GasPedal_Steering -> c_GasPedal,
+  		s_BrakePedal | r_BrakePedal_MF | r_BrakePedal_Steering	-> c_BrakePedal,
+  		s_DNRP | r_DNRP_MF | r_DNRP_Steering -> c_DNRP,
+  		s_Car | r_Car_Safety	-> c_Car,
+  		s_Battery	| r_Battery_Safety	| r_Battery_MF	-> c_Battery,
+  		s_Speed | r_Speed_MF | r_Speed_Safety | r_Speed_Steering	-> c_Speed,
+  		s_CC | r_CC_Steering	-> c_CC,
+  		r_InputHandled | s_MF_Done | s_Steering_Done | s_Safety_Done -> c_InputHandled
+	},
+		Safety(Off) || Test(Off)
+	));

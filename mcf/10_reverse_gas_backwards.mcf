@@ -1,0 +1,28 @@
+% Requirement 10
+% After a DNRP(R) action occured after which a GasPedal(Pressed) occured there should be a path in which one of MotorForce(Backwards), DNRP(D), DNRP(NP), BrakePedal(Pressed) or Battery(Unsafe) occurs in a finite amount of steps.
+
+nu X (ds:Bool = false, bp:Bool = false, bs:Bool = true, on:Bool = false).(
+	% DNRP changes
+	[aDNRP(R)] X(true, bp, bs, on) && 
+	[aDNRP(D) || aDNRP(NP)] X(false, bp, bs, on) &&
+
+	[aVCS(Off)] X(ds, bp, bs, false) &&
+	[aVCS(On)] X(ds, bp, bs, true) &&
+
+	% Brake pedal changes
+	[aBrakePedal(Pressed)] X(ds, true, bs, on) &&
+	[aBrakePedal(Released)] X(ds, false, bs, on) &&
+
+	% Battery changes
+	[aBattery(Unsafe)] X(ds, bp, false, on) &&
+	[aBattery(Safe) || aBattery(Full)] X(ds, bp, true, on) &&
+
+	[!(exists d:sDNRPState . aDNRP(d) || exists d:sPedalState . aBrakePedal(d) || exists d:sBatteryState . aBattery(d) || exists d:sVirtualCarState . aVCS(d))] X(ds, bp, bs, on) && 
+
+	% Gas pedal is pressed after some finite amount of time, we should see an aMotorForce(ApplyForceBackwards) action
+	(val(ds && !bp && bs && on) => [aGasPedal(Pressed)] 
+		mu Y . (
+			[!aMotorForce(ApplyForceBackwards) && !aDNRP(D) && !aDNRP(NP) && !aBrakePedal(Pressed) && !aBattery(Unsafe) && !aVCS(Off)] Y && <true>true
+		)
+	)
+)
