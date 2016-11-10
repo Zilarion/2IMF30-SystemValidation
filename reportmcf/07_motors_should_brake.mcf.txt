@@ -12,8 +12,8 @@ nu X (vcs:Bool = false, bat:Bool = false). (
 
 	[aBrakePedal(Pressed)]
 	(
-		val(vcs && !bat) => (
-			nu Y.(
+		val(vcs && bat) => (
+			mu Y.(
 				[!aMotorForce(ApplyBrake)]Y && <true>true
 			)
 		)
