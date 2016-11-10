@@ -1,4 +1,8 @@
 % Requirement 8
 % If the last Battery(s) had s == Full, we must never see a MotorForce(ApplyBrake).
 
-[true* . aBattery(Full) . (!(aBattery(Safe) || aBattery(Unsafe)))* . aMotorForce(ApplyBrake)] false
+[true* . 
+	aBattery(Full) . 
+	(!(aBattery(Safe) || aBattery(Unsafe)))* . 
+	aMotorForce(ApplyBrake)
+] false

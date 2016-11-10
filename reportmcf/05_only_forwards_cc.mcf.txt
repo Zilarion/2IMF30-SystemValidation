@@ -1,1 +1,5 @@
-[true* . aCCActive(Enabled) . (!aCCActive(Disabled))* . (aMotorForce(ApplyForceBackwards) || aMotorForce(NoForce))] false
+[true* . 
+	aCCActive(Enabled) . 
+	(!aCCActive(Disabled))* . 
+	(aMotorForce(ApplyForceBackwards) || aMotorForce(NoForce))
+] false

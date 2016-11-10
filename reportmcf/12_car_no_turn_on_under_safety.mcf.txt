@@ -1,1 +1,5 @@
-[true* . aBattery(Unsafe) . (!(aBattery(Safe) || aBattery(Full)))* . aVCS(On)] false
+[true* . 
+	aBattery(Unsafe) . 
+	(!(aBattery(Safe) || aBattery(Full)))* . 
+	aVCS(On)
+] false

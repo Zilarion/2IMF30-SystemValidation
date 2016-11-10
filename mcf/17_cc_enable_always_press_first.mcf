@@ -5,5 +5,7 @@ nu X (seen:Bool = false).  (
 	[aCC(Enable)] X(true) &&
 	[aCC(Disable)] X(false) &&
 
-	[aCCActive(Enabled)] val(seen)
+	[!(exists d:sCCButton . aCC(d))] X(seen) &&
+
+	[aCCActive(Enabled)] (val(seen) && X(false))
 )

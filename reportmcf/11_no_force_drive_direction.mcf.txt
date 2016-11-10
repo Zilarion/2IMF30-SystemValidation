@@ -1,1 +1,5 @@
-[true* . aBrakePedal(Pressed) . (!aBrakePedal(Released))* . (aMotorForce(ApplyForceForwards) || aMotorForce(ApplyForceBackwards))] false
+[true* . 
+	aBrakePedal(Pressed) . 
+	(!aBrakePedal(Released))* . 
+	(aMotorForce(ApplyForceForwards) || aMotorForce(ApplyForceBackwards))
+] false
