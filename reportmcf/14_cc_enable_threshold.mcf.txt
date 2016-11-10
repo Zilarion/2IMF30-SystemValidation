@@ -1,5 +1,5 @@
 [true* . 
-	(forall t:sTurnOffThreshold . forall d:sDirection . aSpeed(BelowCCmin, t, d)) .
-	(!(forall tp:sTurnOffThreshold . forall dp:sDirection . aSpeed(AboveCCmin, tp, dp))* .
-	aCCActive(Enabled))
+	(exists t:sTurnOffThreshold . exists d:sDirection . aSpeed(BelowCCmin, t, d)) .
+	(!(exists tp:sTurnOffThreshold . exists dp:sDirection . aSpeed(AboveCCmin, tp, dp)))* .
+	aCCActive(Enabled)
 ] false
