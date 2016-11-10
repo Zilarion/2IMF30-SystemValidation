@@ -1,4 +1,9 @@
 ([true* . aBattery(Unsafe)] mu Y . (
 	[!aMotorForce(NoForce)]Y && <true>true
 )) &&
-[true* . aBattery(Unsafe) . (!(aBattery(Safe) || aBattery(Full)))* . (aMotorForce(ApplyForceBackwards) || aMotorForce(ApplyForceForwards))] false
+
+[true* . 
+	aBattery(Unsafe) . 
+	(!(aBattery(Safe) || aBattery(Full)))* . 
+	(aMotorForce(ApplyForceBackwards) || aMotorForce(ApplyForceForwards))
+] false

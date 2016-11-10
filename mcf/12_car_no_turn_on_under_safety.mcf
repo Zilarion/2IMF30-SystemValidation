@@ -2,4 +2,8 @@
 % Under no circumstance may it happen that in between a Battery(Unsafe) and Battery(!Unsafe) action a VCS(On) action occurs
 
 
-[true* . aBattery(Unsafe) . (!(aBattery(Safe) || aBattery(Full)))* . aVCS(On)] false
+[true* . 
+	aBattery(Unsafe) . 
+	(!(aBattery(Safe) || aBattery(Full)))* . 
+	aVCS(On)
+] false

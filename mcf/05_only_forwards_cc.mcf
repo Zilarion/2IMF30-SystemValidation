@@ -1,4 +1,8 @@
 % Requirement 5
 % In between a CC(Enabled) and CC(Disabled), no MotorForce(!Forwards) can ever be seen.
 
-[true* . aCCActive(Enabled) . (!aCCActive(Disabled))* . (aMotorForce(ApplyForceBackwards) || aMotorForce(NoForce))] false
+[true* . 
+	aCCActive(Enabled) . 
+	(!aCCActive(Disabled))* . 
+	(aMotorForce(ApplyForceBackwards) || aMotorForce(NoForce))
+] false
