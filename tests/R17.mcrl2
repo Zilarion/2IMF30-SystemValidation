@@ -33,6 +33,9 @@ proc Test =
 		% should be FALSE
 		% aCCActive(Enabled).aCC(Enable)
 
+		% should be FALSE
+		% aCC(Enable).aCCActive(Enabled).aCCActive(Disabled).aCCActive(Enabled)
+
 		% should be TRUE
 		% aCCActive(Disabled)
 
@@ -40,7 +43,10 @@ proc Test =
 		% aCC(Enable).aCCActive(Enabled)
 
 		% should be TRUE
-		 aCC(Enable).aCCActive(Disabled).aCCActive(Enabled)
+		% aCC(Enable).aCCActive(Disabled).aCCActive(Enabled)
+
+		% should be TRUE
+		% aCC(Enable).aCCActive(Enabled).aCCActive(Disabled).aCC(Enable).aCCActive(Enabled)
 ;
 
 init
