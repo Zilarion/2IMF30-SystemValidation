@@ -1,1 +1,46 @@
-[true*]<true>true
+% aGasPedal
+[true*] 
+(
+	forall x:sPedalState.mu X.(
+		<aGasPedal(x)> true ||
+		[true] X
+	) &&
+
+	% aBrakePedal
+	forall x:sPedalState.mu X.(
+		<aBrakePedal(x)> true ||
+		[true] X
+	) &&
+
+	% aDNRP
+	forall x:sDNRPState.mu X.(
+		<aDNRP(x)> true ||
+		[true] X
+	) &&
+
+	% aCar
+	forall x:sOnOffButton.mu X.(
+		<aCar(x)> true ||
+		[true] X
+	) &&
+
+	% aBattery
+	forall x:sBatteryState.mu X.(
+		<aBattery(x)> true ||
+		[true] X
+	) &&
+
+	% aSpeed
+	forall x:sCCThreshold.
+	forall y:sTurnOffThreshold.
+	forall z:sDirection.mu X.(
+		<aSpeed(x, y, z)> true ||
+		[true] X
+	) &&
+
+	% aCC
+	forall x:sCCButton.mu X.(
+		<aCC(x)> true ||
+		[true] X
+	)
+)
