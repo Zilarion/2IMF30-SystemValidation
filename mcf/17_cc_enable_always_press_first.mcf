@@ -1,4 +1,9 @@
 % Requirement 17
 % A CCEnable(Enable) action should never occur without being preceded by a CC(Enable) action.
 
-[(!aCC(Enable))* . aCCActive(Enabled)]false
+nu X (seen:Bool = false).  (
+	[aCC(Enable)] X(true) &&
+	[aCC(Disable)] X(false) &&
+
+	[aCCActive(Enabled)] val(seen)
+)

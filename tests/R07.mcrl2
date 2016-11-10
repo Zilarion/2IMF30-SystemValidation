@@ -34,7 +34,7 @@ proc Test =
 		% aVCS(On).aSpeed(BelowCCmin, BelowTurnOffMax, Forwards).aBrakePedal(Pressed).aBattery(Safe).aMotorForce(NoForce)
 
 		% should be TRUE
-		% aVCS(On).aSpeed(BelowCCmin, BelowTurnOffMax, Forwards).aBrakePedal(Pressed).aBattery(Safe).aMotorForce(ApplyBrake)
+		 aVCS(On).aSpeed(BelowCCmin, BelowTurnOffMax, Forwards).aBrakePedal(Pressed).aBattery(Safe).aMotorForce(ApplyBrake)
 
 ;
 

@@ -6,7 +6,9 @@ nu X (safe:Bool = true, speed:sTurnOffThreshold = BelowTurnOffMax).(
 	[aBattery(Unsafe)] X(false, speed) &&
 	[aBattery(Safe) || aBattery(Full)] X(true, speed) &&
 
-	forall c:sCCThreshold . forall dir:sDirection. exists d:sTurnOffThreshold.[ aSpeed(c, d, dir)] X(safe, d) &&
+	forall c:sCCThreshold . forall dir:sDirection.
+	[aSpeed(c, BelowTurnOffMax, dir)] X(safe, BelowTurnOffMax) &&
+	[aSpeed(c, AboveTurnOffMax, dir)] X(safe, AboveTurnOffMax) &&
 
 	[!(exists d:sBatteryState . aBattery(d) || exists c:sCCThreshold . exists dir:sDirection . exists d:sTurnOffThreshold . aSpeed(c, d, dir))] X(safe, speed) &&
 	
