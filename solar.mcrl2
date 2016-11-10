@@ -9,7 +9,8 @@ sort
 	sCCThreshold = struct BelowCCmin | AboveCCmin;
 	sTurnOffThreshold = struct BelowTurnOffMax | AboveTurnOffMax;
 	sDirection = struct Forwards | Backwards | Static;
-	sMotorForce = struct ApplyForceForwards | ApplyForceBackwards | ApplyBrake | NoForce;
+	sMotorForce = struct ApplyForceForwards | ApplyForceBackwards | ApplyBrake | NoForce
+	;
 	sCCState = struct Enabled | Disabled;
 	sCCButton = struct Enable | Disable;
 	sVirtualCarState = struct On | Off;
@@ -70,7 +71,8 @@ act
   	r_Car_Safety : sOnOffButton;
   	r_Battery_Safety : sBatteryState;
   	r_Battery_MF : sBatteryState;
-  	r_Speed_MF, r_Speed_Safety, r_Speed_Steering : sCCThreshold # sTurnOffThreshold # sDirection;
+  	r_Speed_MF, r_Speed_Safety, r_Speed_Steering : sCCThreshold # sTurnOffThreshold # 
+  		sDirection;
   	r_CC_Steering : sCCButton;
 
 		% Inter process communications
@@ -91,14 +93,16 @@ sum dnrp:sDNRPState.aDNRP(dnrp).s_DNRP(dnrp) +
 sum car:sOnOffButton.aCar(car).s_Car(car) +
 sum batt:sBatteryState.aBattery(batt).s_Battery(batt) +
 sum cc:sCCButton.aCC(cc).s_CC(cc) +
-sum ccthr:sCCThreshold.sum onoffthr:sTurnOffThreshold.sum dir:sDirection.aSpeed(ccthr, onoffthr, dir).s_Speed(ccthr, onoffthr, dir)
+sum ccthr:sCCThreshold.sum onoffthr:sTurnOffThreshold.sum dir:sDirection.
+	aSpeed(ccthr, onoffthr, dir).s_Speed(ccthr, onoffthr, dir)
 ).r_InputHandled.InputHandler;
 	
 % --------------------
 % Safety Procedure
 % --------------------
 
-proc Safety(state:sVirtualCarState, battery:sBatteryState, onoffthrState:sTurnOffThreshold) =
+proc Safety(state:sVirtualCarState, battery:sBatteryState, 
+						onoffthrState:sTurnOffThreshold) =
 	% Car on/off button interactions
 	(sum btn:sOnOffButton.r_Car_Safety(btn).
 		% Turn the car on
@@ -118,7 +122,8 @@ proc Safety(state:sVirtualCarState, battery:sBatteryState, onoffthrState:sTurnOf
 	+ r_Battery_Safety(Full).aVCS(state).s_VCS(state).Safety(battery=Full)
 	
 	+ sum ccthr:sCCThreshold.sum onoffthr:sTurnOffThreshold.sum dir:sDirection.
-		r_Speed_Safety(ccthr, onoffthr, dir).aVCS(state).s_VCS(state).Safety(onoffthrState = onoffthr)
+		r_Speed_Safety(ccthr, onoffthr, dir).aVCS(state).s_VCS(state).
+			Safety(onoffthrState = onoffthr)
 	
 	+ s_Safety_Done.Safety();
 
@@ -126,7 +131,8 @@ proc Safety(state:sVirtualCarState, battery:sBatteryState, onoffthrState:sTurnOf
 % Steering procedure
 % --------------------
 
-proc Steering(state:sVirtualCarState, ccthrState:sCCThreshold, enabled:Bool, dnrp:sDNRPState, gas:sPedalState, brake:sPedalState) =
+proc Steering(state:sVirtualCarState, ccthrState:sCCThreshold, enabled:Bool, 
+							dnrp:sDNRPState, gas:sPedalState, brake:sPedalState) =
 	% Receive VCS
 	sum data:sVirtualCarState.r_VCS_steer(data).
 	(
@@ -136,7 +142,7 @@ proc Steering(state:sVirtualCarState, ccthrState:sCCThreshold, enabled:Bool, dnr
 		) <> 
 		(
 			(
-				(enabled == true ) -> (aCCActive(Enabled).s_ccEnable(Enabled)) <> (aCCActive(Disabled).s_ccEnable(Disabled))
+				(enabled == true) -> s_ccEnable(Enabled) <> s_ccEnable(Disabled)
 			).Steering(state = data)
 		)
 	)
@@ -151,7 +157,7 @@ proc Steering(state:sVirtualCarState, ccthrState:sCCThreshold, enabled:Bool, dnr
 		<> 
 		(
 			(
-				(enabled == true ) -> (aCCActive(Enabled).s_ccEnable(Enabled)) <> (aCCActive(Disabled).s_ccEnable(Disabled))
+				(enabled == true) -> s_ccEnable(Enabled) <> s_ccEnable(Disabled)
 			).Steering(gas = i_gas)
 		)
 	)
@@ -160,12 +166,13 @@ proc Steering(state:sVirtualCarState, ccthrState:sCCThreshold, enabled:Bool, dnr
 	(
 		(i_brake == Pressed && enabled == true)-> 
 		(
-			aCCActive(Disabled).s_ccEnable(Disabled).Steering(brake = i_brake, enabled = false)
+			aCCActive(Disabled).s_ccEnable(Disabled).
+				Steering(brake = i_brake, enabled = false)
 		) 
 		<>
 		( 
 			(
-				(enabled == true ) -> (aCCActive(Enabled).s_ccEnable(Enabled)) <> (aCCActive(Disabled).s_ccEnable(Disabled))
+				(enabled == true) -> s_ccEnable(Enabled) <> s_ccEnable(Disabled)
 			).Steering(brake = i_brake) 
 		)
 	)
@@ -178,7 +185,7 @@ proc Steering(state:sVirtualCarState, ccthrState:sCCThreshold, enabled:Bool, dnr
 	<>
 	(
 		(
-			(enabled == true ) -> (aCCActive(Enabled).s_ccEnable(Enabled)) <> (aCCActive(Disabled).s_ccEnable(Disabled))
+			(enabled == true) -> s_ccEnable(Enabled) <>s_ccEnable(Disabled)
 		).Steering(dnrp = i_dnrp)
 	)
 	
@@ -328,6 +335,7 @@ init
   		r_InputHandled | s_MF_Done | s_Steering_Done | s_Safety_Done -> c_InputHandled
 		},
 		 MotorForce(Off, NP, Static, Released, Released, Full, Disabled) ||
-		 Safety(Off, Safe, BelowTurnOffMax) || Steering(Off, BelowCCmin, false, NP, Released, Released) 
-		 || InputHandler
+		 Safety(Off, Safe, BelowTurnOffMax) || 
+		 Steering(Off, BelowCCmin, false, NP, Released, Released) || 
+		 InputHandler
 		)));
