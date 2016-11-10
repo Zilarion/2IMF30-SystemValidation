@@ -136,7 +136,7 @@ proc Steering(state:sVirtualCarState, ccthrState:sCCThreshold, enabled:Bool, dnr
 		) <> 
 		(
 			(
-				(enabled == true ) -> (aCCActive(Enabled).s_ccEnable(Enabled)) <> (aCCActive(Disabled).s_ccEnable(Disabled))
+				(enabled == true) -> s_ccEnable(Enabled) <> s_ccEnable(Disabled)
 			).Steering(state = data)
 		)
 	)
@@ -151,7 +151,7 @@ proc Steering(state:sVirtualCarState, ccthrState:sCCThreshold, enabled:Bool, dnr
 		<> 
 		(
 			(
-				(enabled == true ) -> (aCCActive(Enabled).s_ccEnable(Enabled)) <> (aCCActive(Disabled).s_ccEnable(Disabled))
+				(enabled == true) -> s_ccEnable(Enabled) <> s_ccEnable(Disabled)
 			).Steering(gas = i_gas)
 		)
 	)
@@ -165,7 +165,7 @@ proc Steering(state:sVirtualCarState, ccthrState:sCCThreshold, enabled:Bool, dnr
 		<>
 		( 
 			(
-				(enabled == true ) -> (aCCActive(Enabled).s_ccEnable(Enabled)) <> (aCCActive(Disabled).s_ccEnable(Disabled))
+				(enabled == true) -> s_ccEnable(Enabled) <> s_ccEnable(Disabled)
 			).Steering(brake = i_brake) 
 		)
 	)
@@ -178,7 +178,7 @@ proc Steering(state:sVirtualCarState, ccthrState:sCCThreshold, enabled:Bool, dnr
 	<>
 	(
 		(
-			(enabled == true ) -> (aCCActive(Enabled).s_ccEnable(Enabled)) <> (aCCActive(Disabled).s_ccEnable(Disabled))
+			(enabled == true) -> s_ccEnable(Enabled) <>s_ccEnable(Disabled)
 		).Steering(dnrp = i_dnrp)
 	)
 	

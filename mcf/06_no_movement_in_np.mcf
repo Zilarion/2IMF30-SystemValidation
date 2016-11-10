@@ -8,5 +8,5 @@
 )) &&
 
 % Requirement 6b
-% In between a DNRP(NP) action and a DNRP(!NP) action, a MotorForce(!NoForce) should never be seen.
+% In between a DNRP(NP) action and a DNRP(!NP) action, a MotorForce(!NoForce) should never be seen unless it is brake.
 [true* . aDNRP(NP) . (!(aDNRP(D) || aDNRP(R)))* . (aMotorForce(ApplyForceBackwards) || aMotorForce(ApplyForceForwards))] false
