@@ -107,19 +107,19 @@ proc Safety(state:sVirtualCarState, battery:sBatteryState,
 	(sum btn:sOnOffButton.r_Car_Safety(btn).
 		% Turn the car on
 		(btn == SwitchOn && battery!=Unsafe) ->
-			aVCS(On).s_VCS(On).Safety(state=On)
+			((state == Off) -> aVCS(On)).s_VCS(On).Safety(state=On)
 		<> 
 		% Turn the car off
 		(btn == SwitchOff && onoffthrState == BelowTurnOffMax) ->
-			aVCS(Off).s_VCS(Off).Safety(state=Off)
+			((state == On) -> aVCS(Off)).s_VCS(Off).Safety(state=Off)
 		<> 
 		% We don't have to change anything
 		Safety()
 		)
 		
-	+ r_Battery_Safety(Unsafe).aVCS(Off).s_VCS(Off).Safety(state=Off, battery=Unsafe)
-	+ r_Battery_Safety(Safe).aVCS(state).s_VCS(state).Safety(battery=Safe)
-	+ r_Battery_Safety(Full).aVCS(state).s_VCS(state).Safety(battery=Full)
+	+ r_Battery_Safety(Unsafe).((state == On) -> aVCS(Off)).s_VCS(Off).Safety(state=Off, battery=Unsafe)
+	+ r_Battery_Safety(Safe).s_VCS(state).Safety(battery=Safe)
+	+ r_Battery_Safety(Full).s_VCS(state).Safety(battery=Full)
 	
 	+ sum ccthr:sCCThreshold.sum onoffthr:sTurnOffThreshold.sum dir:sDirection.
 		r_Speed_Safety(ccthr, onoffthr, dir).aVCS(state).s_VCS(state).
