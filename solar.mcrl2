@@ -256,7 +256,13 @@ proc ApplyMotorForce(	m_vcs:sVirtualCarState, m_dnrp:sDNRPState, m_dir:sDirectio
 		% Second note: should we check on battery safety level?
 		aMotorForce(ApplyForceForwards)
 	<> (m_dnrp == NP ) -> %from here on: m_vcs == On
-		aMotorForce(NoForce)
+			(m_brake == Pressed) -> 
+				(m_battery == Full) ->
+					aMotorForce(NoForce)
+				<>
+					aMotorForce(ApplyBrake)
+			<>
+				aMotorForce(NoForce)
 	<> (m_dnrp == D) ->
 		(m_brake == Pressed) -> %ignore gas
 			(m_battery == Full) ->

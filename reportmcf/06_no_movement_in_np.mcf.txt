@@ -1,5 +1,5 @@
 ([true* . aDNRP(NP)] mu Y . (
-	[!aMotorForce(NoForce)]Y && <true>true
+	[!aMotorForce(NoForce) && !aMotorForce(ApplyBrake)]Y && <true>true
 )) &&
 [true* . 
 	aDNRP(NP) . (!(aDNRP(D) || aDNRP(R)))* . 
